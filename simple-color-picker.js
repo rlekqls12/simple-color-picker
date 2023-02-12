@@ -12,7 +12,6 @@ class SimpleColorPickerConstant {
 class SimpleColorPicker {
   #element = null;
   #layout = new SimpleColorPickerLayout();
-  showStatus = SimpleColorPickerConstant.HIDE;
   beforeOpenValue = null;
 
   constructor(element) {
@@ -53,41 +52,17 @@ class SimpleColorPicker {
   }
 
   #addFocusEvent = function () {
-    this.#element.addEventListener(
-      SimpleColorPickerConstant.EVENT_FOCUS,
-      this.showColorPicker
-    );
-    this.#layout.addEventListener(
-      SimpleColorPickerConstant.EVENT_INPUT,
-      this.#executeElementEvent
-    );
-    this.#layout.addEventListener(
-      SimpleColorPickerConstant.EVENT_CHANGE,
-      this.#executeElementEvent
-    );
-    this.#layout.addEventListener(
-      SimpleColorPickerConstant.EVENT_CLOSE,
-      this.#executeElementEvent
-    );
+    this.#element.addEventListener(SimpleColorPickerConstant.EVENT_FOCUS, this.showColorPicker);
+    this.#layout.addEventListener(SimpleColorPickerConstant.EVENT_INPUT, this.#executeElementEvent);
+    this.#layout.addEventListener(SimpleColorPickerConstant.EVENT_CHANGE, this.#executeElementEvent);
+    this.#layout.addEventListener(SimpleColorPickerConstant.EVENT_CLOSE, this.#executeElementEvent);
   };
 
   #removeFocusEvent = function () {
-    this.#element.removeEventListener(
-      SimpleColorPickerConstant.EVENT_FOCUS,
-      this.showColorPicker
-    );
-    this.#layout.removeEventListener(
-      SimpleColorPickerConstant.EVENT_INPUT,
-      this.#executeElementEvent
-    );
-    this.#layout.removeEventListener(
-      SimpleColorPickerConstant.EVENT_CHANGE,
-      this.#executeElementEvent
-    );
-    this.#layout.removeEventListener(
-      SimpleColorPickerConstant.EVENT_CLOSE,
-      this.#executeElementEvent
-    );
+    this.#element.removeEventListener(SimpleColorPickerConstant.EVENT_FOCUS, this.showColorPicker);
+    this.#layout.removeEventListener(SimpleColorPickerConstant.EVENT_INPUT, this.#executeElementEvent);
+    this.#layout.removeEventListener(SimpleColorPickerConstant.EVENT_CHANGE, this.#executeElementEvent);
+    this.#layout.removeEventListener(SimpleColorPickerConstant.EVENT_CLOSE, this.#executeElementEvent);
   };
 
   #executeElementEvent = function (type) {
