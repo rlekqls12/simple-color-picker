@@ -216,9 +216,8 @@ class SimpleColorPickerLayout {
     this.#element = template.content.children[0];
 
     // event - click
-    const clickElement = this.#element.querySelector(
-      `*[data-id="${SimpleColorPickerConstant.COLOR_PICKER_CLICK_EVENT_RANGE}"]`
-    );
+    const clickEventRangeId = SimpleColorPickerConstant.COLOR_PICKER_CLICK_EVENT_RANGE;
+    const clickElement = this.#element.querySelector(`*[data-id="${clickEventRangeId}"]`);
     clickElement.addEventListener(
       "click",
       function (e) {
@@ -237,60 +236,76 @@ class SimpleColorPickerLayout {
     );
 
     // event - mouseup / down / move
-    // TODO: 마우스 이벤트 최적화 방법 찾아보기
-    // TODO: mouseenter leave로 target 바꾸기
-    let mouseInfo = {};
-    const mouseEventElements = [
+    const mouseInfo = {};
+    const elements = [
       SimpleColorPickerConstant.COLOR_PICKER_COLOR_RANGE,
-      SimpleColorPickerConstant.COLOR_PICKER_COLOR_POINTER,
       SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_RANGE,
-      SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_POINTER,
       SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_RANGE,
+      SimpleColorPickerConstant.COLOR_PICKER_COLOR_POINTER,
+      SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_POINTER,
       SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_POINTER,
     ];
     window.addEventListener("mouseup", () => {
-      mouseInfo = { target: null, status: SimpleColorPickerConstant.MOUSE_STATE_UP };
+      mouseInfo.target = null;
+      mouseInfo.status = SimpleColorPickerConstant.MOUSE_STATE_UP;
     });
     window.addEventListener("mousemove", (e) => {
-      if (mouseInfo.target === null || mouseInfo.status !== SimpleColorPickerConstant.MOUSE_STATE_DOWN) return;
-      this.#mouseEvent(mouseInfo.target, e);
+      if (mouseInfo.target === null) return;
+      mouseInfo.x = e.pageX;
+      mouseInfo.y = e.pageY;
+
+      if (mouseInfo.status !== SimpleColorPickerConstant.MOUSE_STATE_DOWN) return;
+      this.#mouseEvent(mouseInfo);
     });
-    mouseEventElements.forEach((dataId) => {
+    elements.forEach((dataId) => {
       const element = this.#element.querySelector(`*[data-id="${dataId}"]`);
       element.addEventListener("mousedown", (e) => {
-        mouseInfo = { target: dataId, status: SimpleColorPickerConstant.MOUSE_STATE_DOWN };
-        this.#mouseEvent(mouseInfo.target, e);
+        mouseInfo.x = e.pageX;
+        mouseInfo.y = e.pageY;
+        mouseInfo.target = dataId;
+        mouseInfo.status = SimpleColorPickerConstant.MOUSE_STATE_DOWN;
+        this.#mouseEvent(mouseInfo);
       });
     });
   };
 
-  #mouseEvent = function (type, { target, pageX, pageY }) {
-    const parent = target.parentNode;
-    const parentRect = parent.getBoundingClientRect();
-    pageX -= parentRect.x;
-    pageY -= parentRect.y;
-
-    let pointerId, pointer;
-    switch (type) {
+  #mouseEvent = function ({ target, x, y }) {
+    let rangeId, pointerId;
+    switch (target) {
       case SimpleColorPickerConstant.COLOR_PICKER_COLOR_RANGE:
       case SimpleColorPickerConstant.COLOR_PICKER_COLOR_POINTER:
+        rangeId = SimpleColorPickerConstant.COLOR_PICKER_COLOR_RANGE;
         pointerId = SimpleColorPickerConstant.COLOR_PICKER_COLOR_POINTER;
-        pointer = this.#element.querySelector(`*[data-id="${pointerId}"]`);
-        pointer.style.left = `${pageX - 5}px`;
-        pointer.style.top = `${pageY - 5}px`;
         break;
       case SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_RANGE:
       case SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_POINTER:
+        rangeId = SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_RANGE;
         pointerId = SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_POINTER;
-        pointer = this.#element.querySelector(`*[data-id="${pointerId}"]`);
-        pointer.style.top = `${pageY - 4}px`;
+        x = null;
         break;
       case SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_RANGE:
       case SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_POINTER:
+        rangeId = SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_RANGE;
         pointerId = SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_POINTER;
-        pointer = this.#element.querySelector(`*[data-id="${pointerId}"]`);
-        pointer.style.top = `${pageY - 4}px`;
+        x = null;
         break;
+    }
+
+    if (rangeId && pointerId) {
+      const pointer = this.#element.querySelector(`*[data-id="${pointerId}"]`);
+      const range = this.#element.querySelector(`*[data-id="${rangeId}"]`);
+      const rangeRect = range.getBoundingClientRect();
+
+      if (x !== null) {
+        const pointerHalf = pointer.offsetWidth / 2;
+        x = Math.min(Math.max(x - (rangeRect.x + pointerHalf), -pointerHalf), rangeRect.width - pointerHalf);
+        pointer.style.left = `${x}px`;
+      }
+      if (y !== null) {
+        const pointerHalf = pointer.offsetHeight / 2;
+        y = Math.min(Math.max(y - (rangeRect.y + pointerHalf), -pointerHalf), rangeRect.height - pointerHalf);
+        pointer.style.top = `${y}px`;
+      }
     }
   };
 }
