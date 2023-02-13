@@ -1,12 +1,35 @@
 class SimpleColorPickerConstant {
   static SHOW = "SHOW";
   static HIDE = "HIDE";
+
+  // -------------------------------------------------------------------------------
+
+  static COLOR_PICKER_COLOR_RANGE = "COLOR_PICKER_COLOR_RANGE";
+  static COLOR_PICKER_SELECT_ORIGIN_COLOR = "COLOR_PICKER_SELECT_ORIGIN_COLOR";
+  static COLOR_PICKER_COLOR_POINTER = "COLOR_PICKER_COLOR_POINTER";
+
+  static COLOR_PICKER_ORIGIN_RANGE = "COLOR_PICKER_ORIGIN_RANGE";
+  static COLOR_PICKER_ORIGIN_POINTER = "COLOR_PICKER_ORIGIN_POINTER";
+
+  static COLOR_PICKER_TRANSPARENCY_RANGE = "COLOR_PICKER_TRANSPARENCY_RANGE";
+  static COLOR_PICKER_SELECT_TRANSPARENCY_COLOR = "COLOR_PICKER_SELECT_TRANSPARENCY_COLOR";
+  static COLOR_PICKER_TRANSPARENCY_POINTER = "COLOR_PICKER_TRANSPARENCY_POINTER";
+
+  static COLOR_PICKER_CLICK_EVENT_RANGE = "COLOR_PICKER_CLICK_EVENT_RANGE";
   static COLOR_PICKER_CANCEL = "COLOR_PICKER_CANCEL";
   static COLOR_PICKER_CHANGE = "COLOR_PICKER_CHANGE";
+
+  // -------------------------------------------------------------------------------
+
   static EVENT_FOCUS = "focus";
   static EVENT_INPUT = "input";
   static EVENT_CHANGE = "change";
   static EVENT_CLOSE = "close";
+
+  // -------------------------------------------------------------------------------
+
+  static MOUSE_STATE_UP = "MOUSE_STATE_UP";
+  static MOUSE_STATE_DOWN = "MOUSE_STATE_DOWN";
 }
 
 class SimpleColorPicker {
@@ -15,16 +38,16 @@ class SimpleColorPicker {
   beforeOpenValue = null;
 
   constructor(element) {
-    this.showColorPicker = this.showColorPicker.bind(this);
-    this.hideColorPicker = this.hideColorPicker.bind(this);
-    this.#executeElementEvent = this.#executeElementEvent.bind(this);
+    this.show = this.show.bind(this);
+    this.hide = this.hide.bind(this);
+    this.#executeLayoutEvent = this.#executeLayoutEvent.bind(this);
 
     this.setElement(element);
   }
 
   setElement(element) {
     if (this.#element) {
-      this.hideColorPicker();
+      this.hide();
       delete this.#element.simpleColorPicker;
       this.#removeFocusEvent();
     }
@@ -34,7 +57,7 @@ class SimpleColorPicker {
     this.#addFocusEvent();
   }
 
-  showColorPicker() {
+  show() {
     if (Boolean(this.#element) === false) return;
     if (this.#layout.showStatus === SimpleColorPickerConstant.SHOW) return;
     const value = this.#element.value;
@@ -43,7 +66,7 @@ class SimpleColorPicker {
     this.#layout.show();
   }
 
-  hideColorPicker() {
+  hide() {
     if (Boolean(this.#element) === false) return;
     if (this.#layout.showStatus === SimpleColorPickerConstant.HIDE) return;
     const value = this.#layout.getValue();
@@ -52,20 +75,20 @@ class SimpleColorPicker {
   }
 
   #addFocusEvent = function () {
-    this.#element.addEventListener(SimpleColorPickerConstant.EVENT_FOCUS, this.showColorPicker);
-    this.#layout.addEventListener(SimpleColorPickerConstant.EVENT_INPUT, this.#executeElementEvent);
-    this.#layout.addEventListener(SimpleColorPickerConstant.EVENT_CHANGE, this.#executeElementEvent);
-    this.#layout.addEventListener(SimpleColorPickerConstant.EVENT_CLOSE, this.#executeElementEvent);
+    this.#element.addEventListener(SimpleColorPickerConstant.EVENT_FOCUS, this.show);
+    this.#layout.addEventListener(SimpleColorPickerConstant.EVENT_INPUT, this.#executeLayoutEvent);
+    this.#layout.addEventListener(SimpleColorPickerConstant.EVENT_CHANGE, this.#executeLayoutEvent);
+    this.#layout.addEventListener(SimpleColorPickerConstant.EVENT_CLOSE, this.#executeLayoutEvent);
   };
 
   #removeFocusEvent = function () {
-    this.#element.removeEventListener(SimpleColorPickerConstant.EVENT_FOCUS, this.showColorPicker);
-    this.#layout.removeEventListener(SimpleColorPickerConstant.EVENT_INPUT, this.#executeElementEvent);
-    this.#layout.removeEventListener(SimpleColorPickerConstant.EVENT_CHANGE, this.#executeElementEvent);
-    this.#layout.removeEventListener(SimpleColorPickerConstant.EVENT_CLOSE, this.#executeElementEvent);
+    this.#element.removeEventListener(SimpleColorPickerConstant.EVENT_FOCUS, this.show);
+    this.#layout.removeEventListener(SimpleColorPickerConstant.EVENT_INPUT, this.#executeLayoutEvent);
+    this.#layout.removeEventListener(SimpleColorPickerConstant.EVENT_CHANGE, this.#executeLayoutEvent);
+    this.#layout.removeEventListener(SimpleColorPickerConstant.EVENT_CLOSE, this.#executeLayoutEvent);
   };
 
-  #executeElementEvent = function (type) {
+  #executeLayoutEvent = function (type) {
     const event = new Event(type);
 
     switch (type) {
@@ -78,12 +101,12 @@ class SimpleColorPicker {
         if (Boolean(this.#element) === false) break;
         this.#element.value = this.#layout.getValue();
         this.#element.dispatchEvent(event);
-        this.hideColorPicker();
+        this.hide();
         break;
       case SimpleColorPickerConstant.EVENT_CLOSE:
         this.#element.value = this.beforeOpenValue;
         this.#layout.setValue(this.beforeOpenValue);
-        this.hideColorPicker();
+        this.hide();
         break;
     }
   };
@@ -114,48 +137,7 @@ class SimpleColorPickerLayout {
   }
 
   constructor() {
-    const template = document.createElement("template");
-    template.innerHTML = `
-    <div tabindex="0" style="position: fixed;">
-      <!-- 테스트용임 -->
-      <!-- canvas(혹은 svg)로 컬러피커 범위 만들고, alpha slider도 만들기 -->
-      <!-- 컬러피커 범위는 맨위는 무지개색, 밑으로 갈수록 검정색 (내가 쓰는 jquery용 참고해보기) -->
-      <input data-id="data" />
-      <button data-id="${SimpleColorPickerConstant.COLOR_PICKER_CANCEL}">Cancel</button>
-      <button data-id="${SimpleColorPickerConstant.COLOR_PICKER_CHANGE}">Change</button>
-    </div>
-    `;
-    this.#element = template.content.children[0];
-    this.#element.addEventListener(
-      "click",
-      function (e) {
-        const target = e.target;
-        const dataId = target.getAttribute("data-id");
-
-        switch (dataId) {
-          case SimpleColorPickerConstant.COLOR_PICKER_CANCEL:
-            this.#excuteEvent(SimpleColorPickerConstant.EVENT_CLOSE);
-            break;
-          case SimpleColorPickerConstant.COLOR_PICKER_CHANGE:
-            this.#excuteEvent(SimpleColorPickerConstant.EVENT_CHANGE);
-            break;
-        }
-      }.bind(this)
-    );
-    // TODO: 테스트용임
-    this.#element.addEventListener(
-      "input",
-      function (e) {
-        const target = e.target;
-        const dataId = target.getAttribute("data-id");
-
-        switch (dataId) {
-          case "data":
-            this.setValue(target.value);
-            break;
-        }
-      }.bind(this)
-    );
+    this.#initLayout();
   }
 
   show() {
@@ -170,7 +152,7 @@ class SimpleColorPickerLayout {
 
   setValue(value) {
     this.#value = value;
-    // TODO: value랑 element DOM이랑 동기화
+    // TODO: value랑 Pointer 위치랑 동기화
   }
   getValue() {
     return this.#value;
@@ -197,6 +179,118 @@ class SimpleColorPickerLayout {
         console.error(error);
       }
     });
+  };
+
+  #initLayout = function () {
+    const template = document.createElement("template");
+    template.innerHTML = `
+    <div tabindex="0" style="position: fixed; margin: 4px; padding: 8px; border: 2px solid black; background: white;">
+      <div style="display: flex; flex-direction: row; gap: 8px;">
+        <div style="position: relative; width: 160px; height: 160px; border-radius: 4px; user-select: none;">
+          <div data-id="${SimpleColorPickerConstant.COLOR_PICKER_SELECT_ORIGIN_COLOR}" style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: rgb(255,0,0);"></div>
+          <div style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);"></div>
+          <div style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);"></div>
+          <div data-id="${SimpleColorPickerConstant.COLOR_PICKER_COLOR_RANGE}" style="position: absolute; width: 100%; height: 100%;"></div>
+          <div data-id="${SimpleColorPickerConstant.COLOR_PICKER_COLOR_POINTER}" style="position: absolute; top: -5px; left: -5px; width: 10px; height: 10px; border: 1px solid white; border-radius: 4px; box-sizing: border-box; box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%); cursor: pointer;"></div>
+        </div>
+        <div style="position: relative; width: 16px; height: 160px; border-radius: 4px; user-select: none;">
+          <div style="position: absolute; width: 100%; height: 160px; border-radius: 4px; background: linear-gradient(to bottom,red 0,#ff0 17%,#0f0 33%,#0ff 50%,#00f 67%,#f0f 83%,red 100%);"></div>
+          <div data-id="${SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_RANGE}" style="position: absolute; width: 100%; height: 100%;"></div>
+          <div data-id="${SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_POINTER}" style="position: absolute; top: -4px; width: 100%; height: 8px; border-radius: 2px; background: white; box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%); cursor: pointer;"></div>
+        </div>
+        <div style="position: relative; width: 16px; height: 160px; border-radius: 4px; user-select: none;">
+          <div style="position: absolute; width: 100%; height: 100%; border-radius: 4px;
+                      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==);
+                      background-image: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='%23ccc' fill-opacity='1'%3E%3Crect x='0' y='0' width='6' height='6' /%3E%3Crect x='6' y='6' width='6' height='6' /%3E%3C/svg%3E);"></div>
+          <div data-id="${SimpleColorPickerConstant.COLOR_PICKER_SELECT_TRANSPARENCY_COLOR}" style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: linear-gradient(to bottom,red 0,rgba(255,255,255,0) 100%);"></div>
+          <div data-id="${SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_RANGE}" style="position: absolute; width: 100%; height: 100%;"></div>
+          <div data-id="${SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_POINTER}" style="position: absolute; top: -4px; width: 100%; height: 8px; border-radius: 2px; background: white; box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%); cursor: pointer;"></div>
+        </div>
+      </div>
+      <div data-id="${SimpleColorPickerConstant.COLOR_PICKER_CLICK_EVENT_RANGE}" style="width: 100%; margin-top: 8px; text-align: right;">
+        <button data-id="${SimpleColorPickerConstant.COLOR_PICKER_CANCEL}" style="cursor: pointer;">Cancel</button>
+        <button data-id="${SimpleColorPickerConstant.COLOR_PICKER_CHANGE}" style="cursor: pointer;">Change</button>
+      </div>
+    </div>
+    `;
+    this.#element = template.content.children[0];
+
+    // event - click
+    const clickElement = this.#element.querySelector(
+      `*[data-id="${SimpleColorPickerConstant.COLOR_PICKER_CLICK_EVENT_RANGE}"]`
+    );
+    clickElement.addEventListener(
+      "click",
+      function (e) {
+        const target = e.target;
+        const dataId = target.getAttribute("data-id");
+
+        switch (dataId) {
+          case SimpleColorPickerConstant.COLOR_PICKER_CANCEL:
+            this.#excuteEvent(SimpleColorPickerConstant.EVENT_CLOSE);
+            break;
+          case SimpleColorPickerConstant.COLOR_PICKER_CHANGE:
+            this.#excuteEvent(SimpleColorPickerConstant.EVENT_CHANGE);
+            break;
+        }
+      }.bind(this)
+    );
+
+    // event - mouseup / down / move
+    // TODO: 마우스 이벤트 최적화 방법 찾아보기
+    let mouseInfo = {};
+    const mouseEventElements = [
+      SimpleColorPickerConstant.COLOR_PICKER_COLOR_RANGE,
+      SimpleColorPickerConstant.COLOR_PICKER_COLOR_POINTER,
+      SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_RANGE,
+      SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_POINTER,
+      SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_RANGE,
+      SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_POINTER,
+    ];
+    window.addEventListener("mouseup", () => {
+      mouseInfo = { target: null, status: SimpleColorPickerConstant.MOUSE_STATE_UP };
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (mouseInfo.target === null || mouseInfo.status !== SimpleColorPickerConstant.MOUSE_STATE_DOWN) return;
+      this.#mouseEvent(mouseInfo.target, e);
+    });
+    mouseEventElements.forEach((dataId) => {
+      const element = this.#element.querySelector(`*[data-id="${dataId}"]`);
+      element.addEventListener("mousedown", (e) => {
+        mouseInfo = { target: dataId, status: SimpleColorPickerConstant.MOUSE_STATE_DOWN };
+        this.#mouseEvent(mouseInfo.target, e);
+      });
+    });
+  };
+
+  #mouseEvent = function (type, { target, pageX, pageY }) {
+    const parent = target.parentNode;
+    const parentRect = parent.getBoundingClientRect();
+    pageX -= parentRect.x;
+    pageY -= parentRect.y;
+
+    let pointerId, pointer;
+    switch (type) {
+      case SimpleColorPickerConstant.COLOR_PICKER_COLOR_RANGE:
+      case SimpleColorPickerConstant.COLOR_PICKER_COLOR_POINTER:
+        pointerId = SimpleColorPickerConstant.COLOR_PICKER_COLOR_POINTER;
+        pointer = this.#element.querySelector(`*[data-id="${pointerId}"]`);
+        pointer.style.left = `${pageX - 5}px`;
+        pointer.style.top = `${pageY - 5}px`;
+        break;
+      case SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_RANGE:
+      case SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_POINTER:
+        pointerId = SimpleColorPickerConstant.COLOR_PICKER_ORIGIN_POINTER;
+        pointer = this.#element.querySelector(`*[data-id="${pointerId}"]`);
+        pointer.style.top = `${pageY - 4}px`;
+        break;
+      case SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_RANGE:
+      case SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_POINTER:
+        pointerId = SimpleColorPickerConstant.COLOR_PICKER_TRANSPARENCY_POINTER;
+        pointer = this.#element.querySelector(`*[data-id="${pointerId}"]`);
+        pointer.style.top = `${pageY - 4}px`;
+        break;
+    }
   };
 }
 
