@@ -11,13 +11,15 @@
     <input id="color-picker" />
     <script>
       const colorPicker = new SimpleColorPicker("#color-picker");
-      // const element = document.querySelector("#color-picker");
-      // element.addEventListener("input", function (e) {
-      //   console.log("input", e);
-      // });
-      // element.addEventListener("change", function (e) {
-      //   console.log("change", e);
-      // });
+      colorPicker.show();
+
+      const element = document.querySelector("#color-picker");
+      element.addEventListener("input", function (e) {
+        console.log("input", e);
+      });
+      element.addEventListener("change", function (e) {
+        console.log("change", e);
+      });
     </script>
   </body>
 </html>
