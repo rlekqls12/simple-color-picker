@@ -238,6 +238,7 @@ class SimpleColorPickerLayout {
 
     // event - mouseup / down / move
     // TODO: 마우스 이벤트 최적화 방법 찾아보기
+    // TODO: mouseenter leave로 target 바꾸기
     let mouseInfo = {};
     const mouseEventElements = [
       SimpleColorPickerConstant.COLOR_PICKER_COLOR_RANGE,
