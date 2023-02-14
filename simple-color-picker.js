@@ -73,7 +73,7 @@
       const value = this.#element.value;
       this.#beforeOpenValue = value;
       this.#layout.setValue(value);
-      this.#layout.show();
+      this.#layout.show(value);
     }
 
     hide() {
@@ -141,6 +141,7 @@
       [SCPConstant.EVENT_CLOSE]: [],
     };
     #showStatus = SCPConstant.HIDE;
+    compareValue = null;
 
     get showStatus() {
       return this.#showStatus;
@@ -150,7 +151,10 @@
       this.#initLayout();
     }
 
-    show() {
+    show(compareValue) {
+      if (compareValue !== undefined) {
+        this.compareValue = compareValue;
+      }
       this.#showStatus = SCPConstant.SHOW;
       document.body.appendChild(this.#element);
       this.#element.focus();
@@ -316,7 +320,18 @@
           y = Math.min(Math.max(y - (rangeRect.y + pointerHalf), -pointerHalf), rangeRect.height - pointerHalf);
           pointer.style.top = `${y}px`;
         }
+
+        if (x !== null || y !== null) {
+          this.#calculateColor();
+          this.#excuteEvent(SCPConstant.EVENT_INPUT);
+        }
       }
+    };
+
+    #calculateColor = function () {
+      // origin
+      // color
+      // transparency
     };
   }
 
