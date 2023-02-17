@@ -355,21 +355,56 @@
         const pointerY = Math.min(Math.max(0, pointerRelativeY), pointerMaxY);
 
         return {
-          xRate: pointerX / pointerMaxX,
-          yRate: pointerY / pointerMaxY,
+          xRate: Math.round((pointerX / pointerMaxX) * 100) / 100,
+          yRate: Math.round((pointerY / pointerMaxY) * 100) / 100,
         };
       }
 
-      const originPointer = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_ORIGIN_POINTER}"]`);
-      // const colorPointer = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_COLOR_POINTER}"]`);
-      // const transparencyPointer = this.#element.querySelector(
-      //   `*[data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER}"]`
-      // );
+      // origin
+      (() => {
+        const originPointer = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_ORIGIN_POINTER}"]`);
+        const originMatrix = getMatrix(originPointer);
 
-      console.log("--------------------------");
-      console.log("ORIGIN", getMatrix(originPointer));
-      // console.log("COLOR", getMatrix(colorPointer));
-      // console.log("TRANSPARENCY", getMatrix(transparencyPointer));
+        const colorRateMap = [
+          { rate: 0, color: [255, 0, 0] },
+          { rate: 0.17, color: [255, 255, 0] },
+          { rate: 0.33, color: [0, 255, 0] },
+          { rate: 0.5, color: [0, 255, 255] },
+          { rate: 0.67, color: [0, 0, 255] },
+          { rate: 0.83, color: [255, 0, 255] },
+          { rate: 1, color: [255, 0, 0] },
+          { rate: 2, color: [255, 0, 0] },
+        ];
+        const colorRateEndIndex = colorRateMap.findIndex((rateInfo) => originMatrix.yRate < rateInfo.rate);
+        const [colorRateStart, colorRateEnd] = [colorRateMap[colorRateEndIndex - 1], colorRateMap[colorRateEndIndex]];
+        const rate = (originMatrix.yRate - colorRateStart.rate) / (colorRateEnd.rate - colorRateStart.rate);
+        const [R, G, B] = colorRateEnd.color.map((next, colorIndex) => {
+          const base = colorRateStart.color[colorIndex];
+          return base + (next - base) * rate;
+        });
+        const result = "rgb(" + [R, G, B].join(",") + ")";
+
+        const originSelectColorRange = this.#element.querySelector(
+          `*[data-id="${SCPConstant.COLOR_PICKER_SELECT_ORIGIN_COLOR}"]`
+        );
+        originSelectColorRange.style.background = result;
+      })();
+
+      // color
+      (() => {
+        const colorPointer = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_COLOR_POINTER}"]`);
+        const colorMatrix = getMatrix(colorPointer);
+        // console.log("COLOR", getMatrix(colorPointer));
+      })();
+
+      // transparency
+      (() => {
+        const transparencyPointer = this.#element.querySelector(
+          `*[data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER}"]`
+        );
+        const transparencyMatrix = getMatrix(transparencyPointer);
+        // console.log("TRANSPARENCY", getMatrix(transparencyPointer));
+      })();
     };
   }
 
