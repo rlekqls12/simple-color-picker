@@ -340,9 +340,36 @@
     };
 
     #calculateColor = function () {
-      // origin
-      // color
-      // transparency
+      function getMatrix(pointer) {
+        const parent = pointer.parentNode;
+        const parentMatrix = parent.getBoundingClientRect();
+        const pointerMatrix = pointer.getBoundingClientRect();
+
+        const pointerMaxX = parentMatrix.width - pointer.offsetWidth / 2;
+        const pointerMaxY = parentMatrix.height - pointer.offsetHeight / 2;
+
+        const pointerRelativeX = pointerMatrix.x - parentMatrix.x;
+        const pointerRelativeY = pointerMatrix.y - parentMatrix.y;
+
+        const pointerX = Math.min(Math.max(0, pointerRelativeX), pointerMaxX);
+        const pointerY = Math.min(Math.max(0, pointerRelativeY), pointerMaxY);
+
+        return {
+          xRate: pointerX / pointerMaxX,
+          yRate: pointerY / pointerMaxY,
+        };
+      }
+
+      const originPointer = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_ORIGIN_POINTER}"]`);
+      // const colorPointer = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_COLOR_POINTER}"]`);
+      // const transparencyPointer = this.#element.querySelector(
+      //   `*[data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER}"]`
+      // );
+
+      console.log("--------------------------");
+      console.log("ORIGIN", getMatrix(originPointer));
+      // console.log("COLOR", getMatrix(colorPointer));
+      // console.log("TRANSPARENCY", getMatrix(transparencyPointer));
     };
   }
 
