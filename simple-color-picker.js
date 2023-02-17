@@ -42,6 +42,7 @@
       this.show = this.show.bind(this);
       this.hide = this.hide.bind(this);
       this.#executeLayoutEvent = this.#executeLayoutEvent.bind(this);
+      this.#changeElementListener = this.#changeElementListener.bind(this);
 
       this.setElement(target);
     }
@@ -53,10 +54,13 @@
       if (element.simpleColorPicker) {
         element.simpleColorPicker.hide && element.simpleColorPicker.hide();
         element.simpleColorPicker.disconnect && element.simpleColorPicker.disconnect();
+        element.removeEventListener(SCPConstant.EVENT_CHANGE, this.#changeElementListener);
       }
 
       this.#element = element;
       this.#element.simpleColorPicker = this;
+      this.#changeElementListener({ target: this.#element });
+      this.#element.addEventListener(SCPConstant.EVENT_CHANGE, this.#changeElementListener);
       this.#addFocusEvent();
     }
 
@@ -119,6 +123,13 @@
           this.hide();
           break;
       }
+    };
+
+    #changeElementListener = function (e) {
+      const target = e.target;
+      const colorValue = target.value;
+
+      target.style.borderColor = colorValue;
     };
 
     #getElement = function (element) {
