@@ -1,37 +1,37 @@
 (() => {
-  class SCPConstant {
-    static SHOW = "SHOW";
-    static HIDE = "HIDE";
+  const SCPConstant = Object.freeze({
+    SHOW: "SHOW",
+    HIDE: "HIDE",
 
     // -------------------------------------------------------------------------------
 
-    static COLOR_PICKER_COLOR_RANGE = "COLOR_PICKER_COLOR_RANGE";
-    static COLOR_PICKER_SELECT_ORIGIN_COLOR = "COLOR_PICKER_SELECT_ORIGIN_COLOR";
-    static COLOR_PICKER_COLOR_POINTER = "COLOR_PICKER_COLOR_POINTER";
+    COLOR_PICKER_COLOR_RANGE: "COLOR_PICKER_COLOR_RANGE",
+    COLOR_PICKER_SELECT_ORIGIN_COLOR: "COLOR_PICKER_SELECT_ORIGIN_COLOR",
+    COLOR_PICKER_COLOR_POINTER: "COLOR_PICKER_COLOR_POINTER",
 
-    static COLOR_PICKER_ORIGIN_RANGE = "COLOR_PICKER_ORIGIN_RANGE";
-    static COLOR_PICKER_ORIGIN_POINTER = "COLOR_PICKER_ORIGIN_POINTER";
+    COLOR_PICKER_ORIGIN_RANGE: "COLOR_PICKER_ORIGIN_RANGE",
+    COLOR_PICKER_ORIGIN_POINTER: "COLOR_PICKER_ORIGIN_POINTER",
 
-    static COLOR_PICKER_TRANSPARENCY_RANGE = "COLOR_PICKER_TRANSPARENCY_RANGE";
-    static COLOR_PICKER_SELECT_TRANSPARENCY_COLOR = "COLOR_PICKER_SELECT_TRANSPARENCY_COLOR";
-    static COLOR_PICKER_TRANSPARENCY_POINTER = "COLOR_PICKER_TRANSPARENCY_POINTER";
+    COLOR_PICKER_TRANSPARENCY_RANGE: "COLOR_PICKER_TRANSPARENCY_RANGE",
+    COLOR_PICKER_SELECT_TRANSPARENCY_COLOR: "COLOR_PICKER_SELECT_TRANSPARENCY_COLOR",
+    COLOR_PICKER_TRANSPARENCY_POINTER: "COLOR_PICKER_TRANSPARENCY_POINTER",
 
-    static COLOR_PICKER_CLICK_EVENT_RANGE = "COLOR_PICKER_CLICK_EVENT_RANGE";
-    static COLOR_PICKER_CANCEL = "COLOR_PICKER_CANCEL";
-    static COLOR_PICKER_CHANGE = "COLOR_PICKER_CHANGE";
-
-    // -------------------------------------------------------------------------------
-
-    static EVENT_FOCUS = "focus";
-    static EVENT_INPUT = "input";
-    static EVENT_CHANGE = "change";
-    static EVENT_CLOSE = "close";
+    COLOR_PICKER_CLICK_EVENT_RANGE: "COLOR_PICKER_CLICK_EVENT_RANGE",
+    COLOR_PICKER_CANCEL: "COLOR_PICKER_CANCEL",
+    COLOR_PICKER_CHANGE: "COLOR_PICKER_CHANGE",
 
     // -------------------------------------------------------------------------------
 
-    static MOUSE_STATE_UP = "MOUSE_STATE_UP";
-    static MOUSE_STATE_DOWN = "MOUSE_STATE_DOWN";
-  }
+    EVENT_FOCUS: "focus",
+    EVENT_INPUT: "input",
+    EVENT_CHANGE: "change",
+    EVENT_CLOSE: "close",
+
+    // -------------------------------------------------------------------------------
+
+    MOUSE_STATE_UP: "MOUSE_STATE_UP",
+    MOUSE_STATE_DOWN: "MOUSE_STATE_DOWN",
+  });
 
   class SCP {
     #element = null;
@@ -42,7 +42,6 @@
       this.show = this.show.bind(this);
       this.hide = this.hide.bind(this);
       this.#executeLayoutEvent = this.#executeLayoutEvent.bind(this);
-      this.#changeElementListener = this.#changeElementListener.bind(this);
 
       this.setElement(target);
     }
@@ -54,13 +53,10 @@
       if (element.simpleColorPicker) {
         element.simpleColorPicker.hide && element.simpleColorPicker.hide();
         element.simpleColorPicker.disconnect && element.simpleColorPicker.disconnect();
-        element.removeEventListener(SCPConstant.EVENT_CHANGE, this.#changeElementListener);
       }
 
       this.#element = element;
       this.#element.simpleColorPicker = this;
-      this.#changeElementListener({ target: this.#element });
-      this.#element.addEventListener(SCPConstant.EVENT_CHANGE, this.#changeElementListener);
       this.#addFocusEvent();
     }
 
@@ -110,23 +106,27 @@
           if (Boolean(this.#element) === false) break;
           this.#element.value = this.#layout.getValue();
           this.#element.dispatchEvent(event);
+          this.#syncElementVisible();
           break;
         case SCPConstant.EVENT_CHANGE:
           if (Boolean(this.#element) === false) break;
           this.#element.value = this.#layout.getValue();
           this.#element.dispatchEvent(event);
           this.hide();
+          this.#syncElementVisible();
           break;
         case SCPConstant.EVENT_CLOSE:
           this.#element.value = this.#beforeOpenValue;
           this.#layout.setValue(this.#beforeOpenValue);
           this.hide();
+          this.#syncElementVisible();
           break;
       }
     };
 
-    #changeElementListener = function (e) {
-      const target = e.target;
+    #syncElementVisible = function () {
+      // TODO: DEBUG VISIBLE
+      const target = this.#element;
       const colorValue = target.value;
 
       target.style.borderColor = colorValue;
@@ -209,14 +209,14 @@
     #initLayout = function () {
       const template = document.createElement("template");
       template.innerHTML = `
-    <div tabindex="0" style="position: fixed; margin: 4px; padding: 8px; border: 2px solid black; background: white;">
+    <div style="position: fixed; margin: 4px; padding: 8px; box-shadow: 4px 4px 8px 1px rgb(0 0 0 / 20%); background: white;">
       <div style="display: flex; flex-direction: row; gap: 8px;">
-        <div style="position: relative; width: 160px; height: 160px; border-radius: 4px; user-select: none;">
+        <div style="position: relative; width: 200px; height: 160px; border-radius: 4px; user-select: none;">
           <div data-id="${SCPConstant.COLOR_PICKER_SELECT_ORIGIN_COLOR}" style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: rgb(255,0,0);"></div>
           <div style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);"></div>
           <div style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);"></div>
           <div data-id="${SCPConstant.COLOR_PICKER_COLOR_RANGE}" style="position: absolute; width: 100%; height: 100%;"></div>
-          <div data-id="${SCPConstant.COLOR_PICKER_COLOR_POINTER}" style="position: absolute; top: -5px; left: 155px; width: 10px; height: 10px; border: 1px solid white; border-radius: 4px; box-sizing: border-box; box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%); cursor: pointer;"></div>
+          <div data-id="${SCPConstant.COLOR_PICKER_COLOR_POINTER}" style="position: absolute; top: -5px; left: 195px; width: 10px; height: 10px; border: 1px solid white; border-radius: 4px; box-sizing: border-box; box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%); cursor: pointer;"></div>
         </div>
         <div style="position: relative; width: 16px; height: 160px; border-radius: 4px; user-select: none;">
           <div style="position: absolute; width: 100%; height: 160px; border-radius: 4px; background: linear-gradient(to bottom,red 0,#ff0 17%,#0f0 33%,#0ff 50%,#00f 67%,#f0f 83%,red 100%);"></div>
@@ -333,14 +333,14 @@
         }
 
         if (x !== null || y !== null) {
-          const color = this.#calculateColor();
+          const color = this.#calculatePointerToColor();
           this.setValue(color);
           this.#excuteEvent(SCPConstant.EVENT_INPUT);
         }
       }
     };
 
-    #calculateColor = function () {
+    #calculatePointerToColor = function () {
       function getMatrix(pointer) {
         const parent = pointer.parentNode;
         const parentMatrix = parent.getBoundingClientRect();
@@ -363,7 +363,8 @@
 
       // origin
       const originRGB = (() => {
-        const originPointer = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_ORIGIN_POINTER}"]`);
+        const pointerDataId = SCPConstant.COLOR_PICKER_ORIGIN_POINTER;
+        const originPointer = this.#element.querySelector(`*[data-id="${pointerDataId}"]`);
         const originMatrix = getMatrix(originPointer);
 
         const colorRateMap = [
@@ -376,48 +377,52 @@
           { rate: 1, color: [255, 0, 0] },
           { rate: 2, color: [255, 0, 0] },
         ];
-        const colorRateEndIndex = colorRateMap.findIndex((rateInfo) => originMatrix.yRate < rateInfo.rate);
-        const [colorRateStart, colorRateEnd] = [colorRateMap[colorRateEndIndex - 1], colorRateMap[colorRateEndIndex]];
-        const rate = (originMatrix.yRate - colorRateStart.rate) / (colorRateEnd.rate - colorRateStart.rate);
-        const [R, G, B] = colorRateEnd.color.map((next, colorIndex) => {
-          const base = colorRateStart.color[colorIndex];
+        const endIndex = colorRateMap.findIndex((rateInfo) => originMatrix.yRate < rateInfo.rate);
+        const [colorStart, colorEnd] = colorRateMap.slice(endIndex - 1, endIndex + 1);
+        const rate = (originMatrix.yRate - colorStart.rate) / (colorEnd.rate - colorStart.rate);
+        const originRGB = colorEnd.color.map((next, colorIndex) => {
+          const base = colorStart.color[colorIndex];
           return base + (next - base) * rate;
         });
-        const result = "rgb(" + [R, G, B].join(",") + ")";
+        const result = "rgb(" + originRGB.join(",") + ")";
 
-        const originSelectColorRange = this.#element.querySelector(
-          `*[data-id="${SCPConstant.COLOR_PICKER_SELECT_ORIGIN_COLOR}"]`
-        );
+        const dataId = SCPConstant.COLOR_PICKER_SELECT_ORIGIN_COLOR;
+        const originSelectColorRange = this.#element.querySelector(`*[data-id="${dataId}"]`);
         originSelectColorRange.style.background = result;
-        return [R, G, B];
+        return originRGB;
       })();
 
       // color
       const colorRGB = (() => {
-        const colorPointer = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_COLOR_POINTER}"]`);
+        const pointerDataId = SCPConstant.COLOR_PICKER_COLOR_POINTER;
+        const colorPointer = this.#element.querySelector(`*[data-id="${pointerDataId}"]`);
         const colorMatrix = getMatrix(colorPointer);
-        // console.log("COLOR", getMatrix(colorPointer));
-        return originRGB;
+
+        const xAxisRGB = originRGB.map((color) => {
+          return color + (255 - color) * (1 - colorMatrix.xRate);
+        });
+
+        const yAxisRGB = xAxisRGB.map((color) => {
+          return color - color * colorMatrix.yRate;
+        });
+
+        return yAxisRGB;
       })();
 
       // transparency
       const transparencyRGBA = (() => {
-        const transparencyPointer = this.#element.querySelector(
-          `*[data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER}"]`
-        );
+        const pointerDataId = SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER;
+        const transparencyPointer = this.#element.querySelector(`*[data-id="${pointerDataId}"]`);
         const transparencyMatrix = getMatrix(transparencyPointer);
-        // console.log("TRANSPARENCY", getMatrix(transparencyPointer));
 
-        const [R, G, B] = colorRGB.map(Math.ceil);
-        const result = `linear-gradient(to bottom,rgba(${[R, G, B].join(",")},1) 0,rgba(255,255,255,0) 100%)`;
+        const result = `linear-gradient(to bottom,rgba(${colorRGB.join(",")},1) 0,rgba(255,255,255,0) 100%)`;
 
-        const transparencySelectColorRange = this.#element.querySelector(
-          `*[data-id="${SCPConstant.COLOR_PICKER_SELECT_TRANSPARENCY_COLOR}"]`
-        );
+        const dataId = SCPConstant.COLOR_PICKER_SELECT_TRANSPARENCY_COLOR;
+        const transparencySelectColorRange = this.#element.querySelector(`*[data-id="${dataId}"]`);
         transparencySelectColorRange.style.background = result;
 
         const alpha = Math.floor((1 - transparencyMatrix.yRate) * 100) / 100;
-        return [R, G, B, alpha];
+        return [...colorRGB.map(Math.ceil), alpha];
       })();
 
       const alpha = transparencyRGBA[3];
@@ -433,6 +438,8 @@
         return `rgba(${transparencyRGBA.join(",")})`;
       }
     };
+
+    #calculateColorToPointer = function () {};
   }
 
   window.SimpleColorPicker = SCP;
