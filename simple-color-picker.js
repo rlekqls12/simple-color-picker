@@ -57,6 +57,7 @@
 
       this.#element = element;
       this.#element.simpleColorPicker = this;
+      this.#syncElementVisible();
       this.#addFocusEvent();
     }
 
