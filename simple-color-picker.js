@@ -426,7 +426,7 @@
           "#" +
           transparencyRGBA
             .slice(0, 3)
-            .map((v) => v.toString(16))
+            .map((v) => v.toString(16).padStart(2, "0"))
             .join("")
         );
       } else {
