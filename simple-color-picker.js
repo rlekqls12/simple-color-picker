@@ -216,7 +216,7 @@
           <div style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);"></div>
           <div style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);"></div>
           <div data-id="${SCPConstant.COLOR_PICKER_COLOR_RANGE}" style="position: absolute; width: 100%; height: 100%;"></div>
-          <div data-id="${SCPConstant.COLOR_PICKER_COLOR_POINTER}" style="position: absolute; top: -5px; left: -5px; width: 10px; height: 10px; border: 1px solid white; border-radius: 4px; box-sizing: border-box; box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%); cursor: pointer;"></div>
+          <div data-id="${SCPConstant.COLOR_PICKER_COLOR_POINTER}" style="position: absolute; top: -5px; left: 155px; width: 10px; height: 10px; border: 1px solid white; border-radius: 4px; box-sizing: border-box; box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%); cursor: pointer;"></div>
         </div>
         <div style="position: relative; width: 16px; height: 160px; border-radius: 4px; user-select: none;">
           <div style="position: absolute; width: 100%; height: 160px; border-radius: 4px; background: linear-gradient(to bottom,red 0,#ff0 17%,#0f0 33%,#0ff 50%,#00f 67%,#f0f 83%,red 100%);"></div>
@@ -333,7 +333,8 @@
         }
 
         if (x !== null || y !== null) {
-          this.#calculateColor();
+          const color = this.#calculateColor();
+          this.setValue(color);
           this.#excuteEvent(SCPConstant.EVENT_INPUT);
         }
       }
@@ -361,7 +362,7 @@
       }
 
       // origin
-      (() => {
+      const originRGB = (() => {
         const originPointer = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_ORIGIN_POINTER}"]`);
         const originMatrix = getMatrix(originPointer);
 
@@ -388,23 +389,49 @@
           `*[data-id="${SCPConstant.COLOR_PICKER_SELECT_ORIGIN_COLOR}"]`
         );
         originSelectColorRange.style.background = result;
+        return [R, G, B];
       })();
 
       // color
-      (() => {
+      const colorRGB = (() => {
         const colorPointer = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_COLOR_POINTER}"]`);
         const colorMatrix = getMatrix(colorPointer);
         // console.log("COLOR", getMatrix(colorPointer));
+        return originRGB;
       })();
 
       // transparency
-      (() => {
+      const transparencyRGBA = (() => {
         const transparencyPointer = this.#element.querySelector(
           `*[data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER}"]`
         );
         const transparencyMatrix = getMatrix(transparencyPointer);
         // console.log("TRANSPARENCY", getMatrix(transparencyPointer));
+
+        const [R, G, B] = colorRGB.map(Math.ceil);
+        const result = `linear-gradient(to bottom,rgba(${[R, G, B].join(",")},1) 0,rgba(255,255,255,0) 100%)`;
+
+        const transparencySelectColorRange = this.#element.querySelector(
+          `*[data-id="${SCPConstant.COLOR_PICKER_SELECT_TRANSPARENCY_COLOR}"]`
+        );
+        transparencySelectColorRange.style.background = result;
+
+        const alpha = Math.floor((1 - transparencyMatrix.yRate) * 100) / 100;
+        return [R, G, B, alpha];
       })();
+
+      const alpha = transparencyRGBA[3];
+      if (alpha === 1) {
+        return (
+          "#" +
+          transparencyRGBA
+            .slice(0, 3)
+            .map((v) => v.toString(16))
+            .join("")
+        );
+      } else {
+        return `rgba(${transparencyRGBA.join(",")})`;
+      }
     };
   }
 
