@@ -200,15 +200,46 @@
       });
     }
 
+    #getLayoutCoordinate() {
+      const target = this.#target;
+      const [targetLeft, targetTop, targetHeight] = [target.offsetLeft, target.offsetTop, target.offsetHeight];
+      const [layoutWidth, layoutHeight] = [this.#element.offsetWidth, this.#element.offsetHeight];
+      const [pageXMin, pageXMax, pageYMin] = [scrollX, scrollX + innerWidth, scrollY];
+
+      let top = 0,
+        left = 0;
+
+      if (targetLeft < pageXMin) {
+        left = pageXMin + layoutWidth * 0.04; // screen left
+      } else if (targetLeft <= pageXMin + layoutWidth * 1.04) {
+        left = targetLeft; // target left
+      } else {
+        left = pageXMax - layoutWidth * 1.08; // screen right
+      }
+
+      if (targetTop <= pageYMin + layoutHeight * 1.04) {
+        top = targetTop + targetHeight + layoutHeight * 0.04; // target bottom
+      } else {
+        top = targetTop - layoutHeight * 1.08; // target top
+      }
+
+      return { top, left };
+    }
+
     show(target) {
       this.#target = target;
-      this.#showStatus = SCPConstant.SHOW;
       document.body.appendChild(this.#element);
+
+      const { top, left } = this.#getLayoutCoordinate();
+      this.#element.style.top = `${top}px`;
+      this.#element.style.left = `${left}px`;
+
+      this.#showStatus = SCPConstant.SHOW;
       this.#element.focus();
     }
     hide() {
-      this.#showStatus = SCPConstant.HIDE;
       this.#element.remove();
+      this.#showStatus = SCPConstant.HIDE;
     }
 
     setCompareValue(value) {
@@ -264,7 +295,7 @@
     #initLayout = function () {
       const template = document.createElement("template");
       template.innerHTML = `
-    <div style="position: fixed; margin: 4px; padding: 8px; box-shadow: 4px 4px 8px 1px rgb(0 0 0 / 20%); background: white;">
+    <div style="position: absolute; margin: 4px; padding: 8px; box-shadow: 4px 4px 8px 1px rgb(0 0 0 / 20%); background: white;">
       <div style="display: flex; flex-direction: row; gap: 8px;">
         <div style="position: relative; width: 200px; height: 160px; border-radius: 4px; user-select: none;">
           <div data-id="${SCPConstant.COLOR_PICKER_SELECT_ORIGIN_COLOR}" style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: rgb(255,0,0);"></div>
@@ -341,8 +372,8 @@
       });
       window.addEventListener("mousemove", (e) => {
         if (mouseInfo.target === null) return;
-        mouseInfo.x = e.pageX;
-        mouseInfo.y = e.pageY;
+        mouseInfo.x = e.clientX;
+        mouseInfo.y = e.clientY;
 
         if (mouseInfo.status !== SCPConstant.MOUSE_STATE_DOWN) return;
         this.#mouseEvent(mouseInfo);
@@ -350,8 +381,8 @@
       elements.forEach((dataId) => {
         const element = this.#element.querySelector(`*[data-id="${dataId}"]`);
         element.addEventListener("mousedown", (e) => {
-          mouseInfo.x = e.pageX;
-          mouseInfo.y = e.pageY;
+          mouseInfo.x = e.clientX;
+          mouseInfo.y = e.clientY;
           mouseInfo.target = dataId;
           mouseInfo.status = SCPConstant.MOUSE_STATE_DOWN;
           this.#mouseEvent(mouseInfo);
@@ -409,16 +440,16 @@
     };
 
     #calculatePointerToColor = function () {
-      function getMatrix(pointer) {
+      function getCoordinate(pointer) {
         const parent = pointer.parentNode;
-        const parentMatrix = parent.getBoundingClientRect();
-        const pointerMatrix = pointer.getBoundingClientRect();
+        const parentCoordinate = parent.getBoundingClientRect();
+        const pointerCoordinate = pointer.getBoundingClientRect();
 
-        const pointerMaxX = parentMatrix.width - pointer.offsetWidth / 2;
-        const pointerMaxY = parentMatrix.height - pointer.offsetHeight / 2;
+        const pointerMaxX = parentCoordinate.width - pointer.offsetWidth / 2;
+        const pointerMaxY = parentCoordinate.height - pointer.offsetHeight / 2;
 
-        const pointerRelativeX = pointerMatrix.x - parentMatrix.x;
-        const pointerRelativeY = pointerMatrix.y - parentMatrix.y;
+        const pointerRelativeX = pointerCoordinate.x - parentCoordinate.x;
+        const pointerRelativeY = pointerCoordinate.y - parentCoordinate.y;
 
         const pointerX = Math.min(Math.max(0, pointerRelativeX), pointerMaxX);
         const pointerY = Math.min(Math.max(0, pointerRelativeY), pointerMaxY);
@@ -433,7 +464,7 @@
       const originRGB = (() => {
         const pointerDataId = SCPConstant.COLOR_PICKER_ORIGIN_POINTER;
         const originPointer = this.#element.querySelector(`*[data-id="${pointerDataId}"]`);
-        const originMatrix = getMatrix(originPointer);
+        const originCoordinate = getCoordinate(originPointer);
 
         const colorRateMap = [
           { rate: 0, color: [255, 0, 0] },
@@ -445,9 +476,9 @@
           { rate: 1, color: [255, 0, 0] },
           { rate: 2, color: [255, 0, 0] },
         ];
-        const endIndex = colorRateMap.findIndex((rateInfo) => originMatrix.yRate < rateInfo.rate);
+        const endIndex = colorRateMap.findIndex((rateInfo) => originCoordinate.yRate < rateInfo.rate);
         const [colorStart, colorEnd] = colorRateMap.slice(endIndex - 1, endIndex + 1);
-        const rate = (originMatrix.yRate - colorStart.rate) / (colorEnd.rate - colorStart.rate);
+        const rate = (originCoordinate.yRate - colorStart.rate) / (colorEnd.rate - colorStart.rate);
         const originRGB = colorEnd.color.map((next, colorIndex) => {
           const base = colorStart.color[colorIndex];
           return base + (next - base) * rate;
@@ -464,14 +495,14 @@
       const colorRGB = (() => {
         const pointerDataId = SCPConstant.COLOR_PICKER_COLOR_POINTER;
         const colorPointer = this.#element.querySelector(`*[data-id="${pointerDataId}"]`);
-        const colorMatrix = getMatrix(colorPointer);
+        const colorCoordinate = getCoordinate(colorPointer);
 
         const xAxisRGB = originRGB.map((color) => {
-          return color + (255 - color) * (1 - colorMatrix.xRate);
+          return color + (255 - color) * (1 - colorCoordinate.xRate);
         });
 
         const yAxisRGB = xAxisRGB.map((color) => {
-          return color - color * colorMatrix.yRate;
+          return color - color * colorCoordinate.yRate;
         });
 
         return yAxisRGB;
@@ -483,7 +514,7 @@
 
         const pointerDataId = SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER;
         const transparencyPointer = this.#element.querySelector(`*[data-id="${pointerDataId}"]`);
-        const transparencyMatrix = getMatrix(transparencyPointer);
+        const transparencyCoordinate = getCoordinate(transparencyPointer);
 
         const result = `linear-gradient(to bottom,rgba(${colorRGB.join(",")},1) 0,rgba(255,255,255,0) 100%)`;
 
@@ -491,7 +522,7 @@
         const transparencySelectColorRange = this.#element.querySelector(`*[data-id="${dataId}"]`);
         transparencySelectColorRange.style.background = result;
 
-        const alpha = Math.floor((1 - transparencyMatrix.yRate) * 100) / 100;
+        const alpha = Math.floor((1 - transparencyCoordinate.yRate) * 100) / 100;
         return [...colorRGB.map(Math.ceil), alpha];
       })();
 
