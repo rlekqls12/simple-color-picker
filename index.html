@@ -10,7 +10,18 @@
   <body>
     <input id="color-picker" value="#ff0000" />
     <script>
-      const colorPicker = new SimpleColorPicker("#color-picker");
+      // options is optional
+      const colorPickerOptions = {
+        transparency: true,
+        immediateInput: true,
+        showButtons: true, // this true -> showChangeButton, showCancelButton true
+        showChangeButton: true,
+        showCancelButton: true,
+        outsideClickClose: false,
+        selectColorClose: false,
+        showCompare: true,
+      };
+      const colorPicker = new SimpleColorPicker("#color-picker", colorPickerOptions);
       colorPicker.show();
 
       // TODO: 팝업 위치 유동적으로 표시하기
