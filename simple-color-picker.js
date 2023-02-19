@@ -12,6 +12,7 @@
     COLOR_PICKER_ORIGIN_RANGE: "COLOR_PICKER_ORIGIN_RANGE",
     COLOR_PICKER_ORIGIN_POINTER: "COLOR_PICKER_ORIGIN_POINTER",
 
+    COLOR_PICKER_TRANSPARENCY_WRAP: "COLOR_PICKER_TRANSPARENCY_WRAP",
     COLOR_PICKER_TRANSPARENCY_RANGE: "COLOR_PICKER_TRANSPARENCY_RANGE",
     COLOR_PICKER_SELECT_TRANSPARENCY_COLOR: "COLOR_PICKER_SELECT_TRANSPARENCY_COLOR",
     COLOR_PICKER_TRANSPARENCY_POINTER: "COLOR_PICKER_TRANSPARENCY_POINTER",
@@ -36,13 +37,22 @@
   class SCP {
     #element = null;
     #layout = new SCPLayout();
-    #beforeOpenValue = null;
+    options = {
+      transparency: true,
+      immediateInput: true,
+      showButtons: true, // this true -> showChangeButton, showCancelButton true
+      showChangeButton: true,
+      showCancelButton: true,
+      outsideClickClose: false,
+      selectColorClose: false,
+    };
 
-    constructor(target) {
+    constructor(target, options) {
       this.show = this.show.bind(this);
       this.hide = this.hide.bind(this);
       this.#executeLayoutEvent = this.#executeLayoutEvent.bind(this);
 
+      Object.assign(this.options, options || {});
       this.setElement(target);
     }
 
@@ -72,9 +82,10 @@
       if (Boolean(this.#element) === false) return;
       if (this.#layout.showStatus === SCPConstant.SHOW) return;
       const value = this.#element.value;
-      this.#beforeOpenValue = value;
+      this.#layout.setCompareValue(value);
       this.#layout.setValue(value);
-      this.#layout.show(value);
+      this.#layout.setLayoutOptions(this.options);
+      this.#layout.show(this.#element);
     }
 
     hide() {
@@ -117,8 +128,9 @@
           this.#syncElementVisible();
           break;
         case SCPConstant.EVENT_CLOSE:
-          this.#element.value = this.#beforeOpenValue;
-          this.#layout.setValue(this.#beforeOpenValue);
+          const compareValue = this.#layout.getCompareValue();
+          this.#element.value = compareValue;
+          this.#layout.setValue(compareValue);
           this.hide();
           this.#syncElementVisible();
           break;
@@ -153,7 +165,9 @@
       [SCPConstant.EVENT_CLOSE]: [],
     };
     #showStatus = SCPConstant.HIDE;
-    compareValue = null;
+    #target = null;
+    #compareValue = null;
+    options = {};
 
     get showStatus() {
       return this.#showStatus;
@@ -161,12 +175,30 @@
 
     constructor() {
       this.#initLayout();
+
+      // outsideClickClose
+      window.addEventListener("click", (e) => {
+        if (this.#showStatus === SCPConstant.HIDE) return;
+        if (this.options.outsideClickClose !== true) return;
+
+        const layout = this.#element;
+        const parents = [document, document.body, layout];
+        let target = e.target;
+
+        while (parents.includes(target) === false) {
+          if (target === this.#target) return;
+
+          target = target.parentNode;
+        }
+
+        if (target !== layout) {
+          this.#excuteEvent(SCPConstant.EVENT_CLOSE);
+        }
+      });
     }
 
-    show(compareValue) {
-      if (compareValue !== undefined) {
-        this.compareValue = compareValue;
-      }
+    show(target) {
+      this.#target = target;
       this.#showStatus = SCPConstant.SHOW;
       document.body.appendChild(this.#element);
       this.#element.focus();
@@ -176,9 +208,16 @@
       this.#element.remove();
     }
 
+    setCompareValue(value) {
+      this.#compareValue = value;
+    }
+    getCompareValue() {
+      return this.#compareValue;
+    }
+
     setValue(value) {
       this.#value = value;
-      // TODO: value랑 Pointer 위치랑 동기화
+      this.#calculateColorToPointer();
     }
     getValue() {
       return this.#value;
@@ -224,7 +263,7 @@
           <div data-id="${SCPConstant.COLOR_PICKER_ORIGIN_RANGE}" style="position: absolute; width: 100%; height: 100%;"></div>
           <div data-id="${SCPConstant.COLOR_PICKER_ORIGIN_POINTER}" style="position: absolute; top: -4px; width: 100%; height: 8px; border-radius: 2px; background: white; box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%); cursor: pointer;"></div>
         </div>
-        <div style="position: relative; width: 16px; height: 160px; border-radius: 4px; user-select: none;">
+        <div data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_WRAP}" style="position: relative; width: 16px; height: 160px; border-radius: 4px; user-select: none;">
           <div style="position: absolute; width: 100%; height: 100%; border-radius: 4px;
                       background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==);
                       background-image: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='%23ccc' fill-opacity='1'%3E%3Crect x='0' y='0' width='6' height='6' /%3E%3Crect x='6' y='6' width='6' height='6' /%3E%3C/svg%3E);"></div>
@@ -272,6 +311,13 @@
         SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER,
       ];
       window.addEventListener("mouseup", () => {
+        if (
+          mouseInfo.target !== null &&
+          this.options.selectColorClose === true &&
+          mouseInfo.target !== SCPConstant.COLOR_PICKER_ORIGIN_POINTER
+        ) {
+          this.#excuteEvent(SCPConstant.EVENT_CHANGE);
+        }
         mouseInfo.target = null;
         mouseInfo.status = SCPConstant.MOUSE_STATE_UP;
       });
@@ -336,7 +382,10 @@
         if (x !== null || y !== null) {
           const color = this.#calculatePointerToColor();
           this.setValue(color);
-          this.#excuteEvent(SCPConstant.EVENT_INPUT);
+
+          if (this.options.immediateInput === true) {
+            this.#excuteEvent(SCPConstant.EVENT_INPUT);
+          }
         }
       }
     };
@@ -412,6 +461,8 @@
 
       // transparency
       const transparencyRGBA = (() => {
+        if (this.options.transparency !== true) return [...colorRGB.map(Math.ceil), 1];
+
         const pointerDataId = SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER;
         const transparencyPointer = this.#element.querySelector(`*[data-id="${pointerDataId}"]`);
         const transparencyMatrix = getMatrix(transparencyPointer);
@@ -441,6 +492,32 @@
     };
 
     #calculateColorToPointer = function () {};
+
+    setLayoutOptions(options) {
+      this.options = options;
+
+      // transparency
+      const transparencyWrap = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_WRAP}"`);
+      transparencyWrap.style.display = options.transparency === true ? null : "none";
+
+      // showButtons / showChangeButton / showCancelButton
+      if (options.showButtons === true) {
+        const buttonWrap = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_CLICK_EVENT_RANGE}"`);
+        const changeButton = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_CHANGE}"`);
+        const cancelButton = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_CANCEL}"`);
+        buttonWrap.style.display = null;
+        changeButton.style.display = null;
+        cancelButton.style.display = null;
+      } else {
+        const buttonWrap = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_CLICK_EVENT_RANGE}"`);
+        const changeButton = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_CHANGE}"`);
+        const cancelButton = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_CANCEL}"`);
+        buttonWrap.style.display =
+          options.showChangeButton === true || options.showCancelButton === true ? null : "none";
+        changeButton.style.display = options.showChangeButton === true ? null : "none";
+        cancelButton.style.display = options.showCancelButton === true ? null : "none";
+      }
+    }
   }
 
   window.SimpleColorPicker = SCP;
