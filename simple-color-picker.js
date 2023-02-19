@@ -17,6 +17,8 @@
     COLOR_PICKER_SELECT_TRANSPARENCY_COLOR: "COLOR_PICKER_SELECT_TRANSPARENCY_COLOR",
     COLOR_PICKER_TRANSPARENCY_POINTER: "COLOR_PICKER_TRANSPARENCY_POINTER",
 
+    COLOR_PICKER_COMPARE: "COLOR_PICKER_COMPARE",
+
     COLOR_PICKER_CLICK_EVENT_RANGE: "COLOR_PICKER_CLICK_EVENT_RANGE",
     COLOR_PICKER_CANCEL: "COLOR_PICKER_CANCEL",
     COLOR_PICKER_CHANGE: "COLOR_PICKER_CHANGE",
@@ -45,6 +47,7 @@
       showCancelButton: true,
       outsideClickClose: false,
       selectColorClose: false,
+      showCompare: true,
     };
 
     constructor(target, options) {
@@ -210,6 +213,12 @@
 
     setCompareValue(value) {
       this.#compareValue = value;
+
+      if (this.options.showCompare === true) {
+        const compareColor = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_COMPARE}"`);
+        compareColor.style.borderTopColor = value;
+        compareColor.style.borderLeftColor = value;
+      }
     }
     getCompareValue() {
       return this.#compareValue;
@@ -218,6 +227,12 @@
     setValue(value) {
       this.#value = value;
       this.#calculateColorToPointer();
+
+      if (this.options.showCompare === true) {
+        const compareColor = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_COMPARE}"`);
+        compareColor.style.borderBottomColor = value;
+        compareColor.style.borderRightColor = value;
+      }
     }
     getValue() {
       return this.#value;
@@ -272,9 +287,12 @@
           <div data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER}" style="position: absolute; top: -4px; width: 100%; height: 8px; border-radius: 2px; background: white; box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%); cursor: pointer;"></div>
         </div>
       </div>
-      <div data-id="${SCPConstant.COLOR_PICKER_CLICK_EVENT_RANGE}" style="width: 100%; margin-top: 8px; text-align: right;">
-        <button data-id="${SCPConstant.COLOR_PICKER_CANCEL}" style="cursor: pointer;">Cancel</button>
-        <button data-id="${SCPConstant.COLOR_PICKER_CHANGE}" style="cursor: pointer;">Change</button>
+      <div style="display: flex; align-items: center; width: 100%; margin-top: 8px;">
+        <div data-id="${SCPConstant.COLOR_PICKER_COMPARE}" style="border: 10px solid; box-sizing: border-box;"></div>
+        <div data-id="${SCPConstant.COLOR_PICKER_CLICK_EVENT_RANGE}" style="flex: 1; text-align: right;">
+          <button data-id="${SCPConstant.COLOR_PICKER_CANCEL}" style="cursor: pointer;">Cancel</button>
+          <button data-id="${SCPConstant.COLOR_PICKER_CHANGE}" style="cursor: pointer;">Change</button>
+        </div>
       </div>
     </div>
     `;
@@ -517,6 +535,10 @@
         changeButton.style.display = options.showChangeButton === true ? null : "none";
         cancelButton.style.display = options.showCancelButton === true ? null : "none";
       }
+
+      // showCompare
+      const compareColor = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_COMPARE}"`);
+      compareColor.style.display = options.showCompare === true ? null : "none";
     }
   }
 
