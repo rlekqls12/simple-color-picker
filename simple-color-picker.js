@@ -85,9 +85,9 @@
       if (Boolean(this.#element) === false) return;
       if (this.#layout.showStatus === SCPConstant.SHOW) return;
       const value = this.#element.value;
+      this.#layout.setLayoutOptions(this.options);
       this.#layout.setCompareValue(value);
       this.#layout.setValue(value);
-      this.#layout.setLayoutOptions(this.options);
       this.#layout.show(this.#element);
     }
 
