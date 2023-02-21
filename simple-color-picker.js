@@ -1,4 +1,5 @@
 (() => {
+  // 상수
   const SCPConstant = Object.freeze({
     SHOW: "SHOW",
     HIDE: "HIDE",
@@ -36,18 +37,20 @@
     MOUSE_STATE_DOWN: "MOUSE_STATE_DOWN",
   });
 
+  // input element와 color-picker 팝업을 연결시켜주는 클래스 (데이터, 이벤트)
   class SCP {
-    #element = null;
-    #layout = new SCPLayout();
+    #element = null; // 입력 받는 엘리먼트
+    #layout = new SCPLayout(); // color-picker 팝업 클래스
     options = {
-      transparency: true,
-      immediateInput: true,
-      showButtons: true, // this true -> showChangeButton, showCancelButton true
-      showChangeButton: true,
-      showCancelButton: true,
-      outsideClickClose: false,
-      selectColorClose: false,
-      showCompare: true,
+      // color-picker 옵션
+      transparency: true, // 투명도 조절바 표시
+      immediateInput: true, // 선택 즉시 input 이벤트 발생
+      showButtons: true, // 버튼 표시, true면 showChangeButton, showCancelButton 옵션도 true로 인식, false면 showChangeButton, showCancelButton에 따라 각각 표시
+      showChangeButton: true, // Change 버튼 표시
+      showCancelButton: true, // Cancel 버튼 표시
+      outsideClickClose: false, // color-picker 팝업 외부 클릭시 팝업 닫기
+      selectColorClose: false, // 색상 및 투명도 선택시 change 이벤트 발생 후 팝업 닫기
+      showCompare: true, // 팝업을 열 때, 지정된 색상과 현재 선택된 색상을 비교하는 엘리먼트 표시
     };
 
     constructor(target, options) {
@@ -59,6 +62,7 @@
       this.setElement(target);
     }
 
+    // 기존 엘리먼트 연동 해제 및 입력 받는 엘리먼트 연동
     setElement(target) {
       this.disconnect();
 
@@ -74,6 +78,7 @@
       this.#addFocusEvent();
     }
 
+    // 기존 엘리먼트 연동 해제
     disconnect() {
       if (this.#element === null) return;
       this.hide();
@@ -81,6 +86,7 @@
       this.#removeFocusEvent();
     }
 
+    // color-picker 팝업 표시
     show() {
       if (Boolean(this.#element) === false) return;
       if (this.#layout.showStatus === SCPConstant.SHOW) return;
@@ -91,6 +97,7 @@
       this.#layout.show(this.#element);
     }
 
+    // color-picker 팝업 닫기
     hide() {
       if (Boolean(this.#element) === false) return;
       if (this.#layout.showStatus === SCPConstant.HIDE) return;
@@ -99,6 +106,7 @@
       this.#layout.hide();
     }
 
+    // 입력 받는 엘리먼트 및 color-picker 팝업에 이벤트 연결
     #addFocusEvent = function () {
       this.#element.addEventListener(SCPConstant.EVENT_FOCUS, this.show);
       this.#layout.addEventListener(SCPConstant.EVENT_INPUT, this.#executeLayoutEvent);
@@ -106,6 +114,7 @@
       this.#layout.addEventListener(SCPConstant.EVENT_CLOSE, this.#executeLayoutEvent);
     };
 
+    // 입력 받는 엘리먼트 및 color-picker 팝업에 이벤트 연결 해제
     #removeFocusEvent = function () {
       this.#element.removeEventListener(SCPConstant.EVENT_FOCUS, this.show);
       this.#layout.removeEventListener(SCPConstant.EVENT_INPUT, this.#executeLayoutEvent);
@@ -113,6 +122,7 @@
       this.#layout.removeEventListener(SCPConstant.EVENT_CLOSE, this.#executeLayoutEvent);
     };
 
+    // color-picker에서 이벤트 발생시 특정 동작 실행
     #executeLayoutEvent = function (type) {
       const event = new Event(type);
 
@@ -140,6 +150,7 @@
       }
     };
 
+    // TODO: 개발 디버그용
     #syncElementVisible = function () {
       // TODO: DEBUG VISIBLE
       const target = this.#element;
@@ -148,6 +159,7 @@
       target.style.borderColor = colorValue;
     };
 
+    // query-selector 및 element로 엘리먼트 조회
     #getElement = function (element) {
       if (typeof element === "string") {
         return document.querySelector(element);
@@ -159,18 +171,20 @@
     };
   }
 
+  // color-picker 팝업 클래스
   class SCPLayout {
-    #element = null;
-    #value = null;
+    #element = null; // 팝업 엘리먼트
+    #value = null; // 선택된 색상 값
     #listeners = {
+      // 이벤트 발생시 실행시킬 함수 배열
       [SCPConstant.EVENT_INPUT]: [],
       [SCPConstant.EVENT_CHANGE]: [],
       [SCPConstant.EVENT_CLOSE]: [],
     };
-    #showStatus = SCPConstant.HIDE;
-    #target = null;
-    #compareValue = null;
-    options = {};
+    #showStatus = SCPConstant.HIDE; // 팝업 표시 상태
+    #target = null; // 입력 받을 엘리먼트
+    #compareValue = null; // 비교할 이전 색상 값
+    options = {}; // color-picker 표시 옵션
 
     get showStatus() {
       return this.#showStatus;
@@ -200,6 +214,7 @@
       });
     }
 
+    // 입력 받을 엘리먼트의 화면 위치에 따라 color-picker 팝업 위치 계산
     #getLayoutCoordinate() {
       const target = this.#target;
       const [targetLeft, targetTop, targetHeight] = [target.offsetLeft, target.offsetTop, target.offsetHeight];
@@ -226,6 +241,7 @@
       return { top, left };
     }
 
+    // color-picker 팝업 표시
     show(target) {
       this.#target = target;
       document.body.appendChild(this.#element);
@@ -237,11 +253,13 @@
       this.#showStatus = SCPConstant.SHOW;
       this.#element.focus();
     }
+    // color-picker 팝업 닫기
     hide() {
       this.#element.remove();
       this.#showStatus = SCPConstant.HIDE;
     }
 
+    // 비교 할 색상 값 설정 및 엘리먼트에 표시
     setCompareValue(value) {
       this.#compareValue = value;
 
@@ -251,10 +269,12 @@
         compareColor.style.borderLeftColor = value;
       }
     }
+    // 비교 할 색상 값 조회
     getCompareValue() {
       return this.#compareValue;
     }
 
+    // 선택한 색상 값 설정 및 엘리먼트에 표시
     setValue(value) {
       this.#value = value;
       this.#calculateColorToPointer();
@@ -265,14 +285,17 @@
         compareColor.style.borderRightColor = value;
       }
     }
+    // 선택한 색상 값 조회
     getValue() {
       return this.#value;
     }
 
+    // color-picker 팝업에 이벤트 연결
     addEventListener(type, fn) {
       if (Boolean(this.#listeners[type]) === false) return;
       this.#listeners[type].push(fn);
     }
+    // color-picker 팝업에 이벤트 연결 해제
     removeEventListener(type, fn) {
       if (Boolean(this.#listeners[type]) === false) return;
       const findIndex = this.#listeners[type].findIndex(function (f) {
@@ -281,6 +304,7 @@
       this.#listeners[type].splice(findIndex, 1);
     }
 
+    // color-picker 팝업에 이벤트 실행
     #excuteEvent = function (type) {
       if (Boolean(this.#listeners[type]) === false) return;
       this.#listeners[type].forEach(function (fn) {
@@ -292,6 +316,7 @@
       });
     };
 
+    // color-picker 팝업 초기화
     #initLayout = function () {
       const template = document.createElement("template");
       template.innerHTML = `
@@ -390,6 +415,7 @@
       });
     };
 
+    // color-picker 팝업에서 Pointer 마우스 이벤트
     #mouseEvent = function ({ target, x, y }) {
       let rangeId, pointerId;
       switch (target) {
@@ -439,6 +465,7 @@
       }
     };
 
+    // 포인터 위치에 따른 색상 값 추출
     #calculatePointerToColor = function () {
       function getCoordinate(pointer) {
         const parent = pointer.parentNode;
@@ -540,8 +567,10 @@
       }
     };
 
+    // 색상 값에 따른 포인터 위치 추출
     #calculateColorToPointer = function () {};
 
+    // color-picker 옵션 설정 및 적용
     setLayoutOptions(options) {
       this.options = options;
 
@@ -573,5 +602,6 @@
     }
   }
 
+  // 글로벌로 사용할 수 있게 window에 변수 연결
   window.SimpleColorPicker = SCP;
 })();
