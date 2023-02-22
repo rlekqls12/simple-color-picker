@@ -252,6 +252,7 @@
 
       this.#showStatus = SCPConstant.SHOW;
       this.#element.focus();
+      this.#calculateColorToPointer();
     }
     // color-picker 팝업 닫기
     hide() {
@@ -277,7 +278,6 @@
     // 선택한 색상 값 설정 및 엘리먼트에 표시
     setValue(value) {
       this.#value = value;
-      this.#calculateColorToPointer();
 
       if (this.options.showCompare === true) {
         const compareColor = this.#element.querySelector(`*[data-id="${SCPConstant.COLOR_PICKER_COMPARE}"`);
@@ -568,7 +568,60 @@
     };
 
     // 색상 값에 따른 포인터 위치 추출
-    #calculateColorToPointer = function () {};
+    #calculateColorToPointer = function () {
+      const value = this.getValue();
+      let RGBA = [0, 0, 0, 1];
+
+      if (value.startsWith("#")) {
+        function convertHexToNumber(hex) {
+          return Number.parseInt(`0x${hex}`);
+        }
+
+        let startIndex = 0;
+
+        // #AARRGGBB
+        if (value.length === 9) {
+          RGBA[3] = convertHexToNumber(value.substr(1, 2)) / 255;
+          startIndex = 1;
+        }
+
+        // #RRGGBB / #AARRGGBB
+        if (value.length >= 7) {
+          let index = startIndex,
+            length = startIndex + 1;
+          for (; index < length; index++) {
+            RGBA[index - startIndex] = convertHexToNumber(value.substr(1 + index * 2, 2));
+          }
+        }
+      } else if (value.toLowerCase().startsWith("rgb(")) {
+        // rgb(RR, GG, BB)
+        Object.assign(
+          RGBA,
+          value
+            .toLowerCase()
+            .replace(/rgb\((.*?)\)/, "$1")
+            .split(",")
+            .map(Number)
+        );
+      } else if (value.toLowerCase().startsWith("rgba(")) {
+        // rgba(RR, GG, BB, AA)
+        Object.assign(
+          RGBA,
+          value
+            .toLowerCase()
+            .replace(/rgba\((.*?)\)/, "$1")
+            .split(",")
+            .map(Number)
+        );
+      } else {
+        // TODO: 위치 값 초기화
+        return;
+      }
+
+      console.log("calculateColorToPointer", RGBA);
+
+      // 색상 값에 따른 포인터 위치 변경
+    };
 
     // color-picker 옵션 설정 및 적용
     setLayoutOptions(options) {
