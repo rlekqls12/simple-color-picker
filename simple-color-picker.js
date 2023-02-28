@@ -185,6 +185,17 @@
     #target = null; // 입력 받을 엘리먼트
     #compareValue = null; // 비교할 이전 색상 값
     options = {}; // color-picker 표시 옵션
+    // 원색 색상 맵
+    colorRateMap = [
+      { rate: 0, color: [255, 0, 0] },
+      { rate: 0.17, color: [255, 255, 0] },
+      { rate: 0.33, color: [0, 255, 0] },
+      { rate: 0.5, color: [0, 255, 255] },
+      { rate: 0.67, color: [0, 0, 255] },
+      { rate: 0.83, color: [255, 0, 255] },
+      { rate: 1, color: [255, 0, 0] },
+      { rate: 2, color: [255, 0, 0] },
+    ];
 
     get showStatus() {
       return this.#showStatus;
@@ -497,18 +508,8 @@
         const originPointer = this.#element.querySelector(`*[data-id="${pointerDataId}"]`);
         const originCoordinate = getCoordinate(originPointer);
 
-        const colorRateMap = [
-          { rate: 0, color: [255, 0, 0] },
-          { rate: 0.17, color: [255, 255, 0] },
-          { rate: 0.33, color: [0, 255, 0] },
-          { rate: 0.5, color: [0, 255, 255] },
-          { rate: 0.67, color: [0, 0, 255] },
-          { rate: 0.83, color: [255, 0, 255] },
-          { rate: 1, color: [255, 0, 0] },
-          { rate: 2, color: [255, 0, 0] },
-        ];
-        const endIndex = colorRateMap.findIndex((rateInfo) => originCoordinate.yRate < rateInfo.rate);
-        const [colorStart, colorEnd] = colorRateMap.slice(endIndex - 1, endIndex + 1);
+        const endIndex = this.colorRateMap.findIndex((rateInfo) => originCoordinate.yRate < rateInfo.rate);
+        const [colorStart, colorEnd] = this.colorRateMap.slice(endIndex - 1, endIndex + 1);
         const rate = (originCoordinate.yRate - colorStart.rate) / (colorEnd.rate - colorStart.rate);
         const originRGB = colorEnd.color.map((next, colorIndex) => {
           const base = colorStart.color[colorIndex];
@@ -646,21 +647,31 @@
       const transparencyPointerDataId = SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER;
       const transparencyPointer = this.#element.querySelector(`*[data-id="${transparencyPointerDataId}"]`);
       const transparencyPointerParent = transparencyPointer.parentNode;
-      const pointerY = -transparencyPointer.offsetHeight / 2 + transparencyPointerParent.offsetHeight * (1 - RGBA[3]);
-      transparencyPointer.style.top = `${pointerY}px`;
+      const transparencyPointerY =
+        -transparencyPointer.offsetHeight / 2 + transparencyPointerParent.offsetHeight * (1 - RGBA[3]);
+      transparencyPointer.style.top = `${transparencyPointerY}px`;
 
-      const colorRateMap = [
-        { rate: 0, color: [255, 0, 0] },
-        { rate: 0.17, color: [255, 255, 0] },
-        { rate: 0.33, color: [0, 255, 0] },
-        { rate: 0.5, color: [0, 255, 255] },
-        { rate: 0.67, color: [0, 0, 255] },
-        { rate: 0.83, color: [255, 0, 255] },
-        { rate: 1, color: [255, 0, 0] },
-        { rate: 2, color: [255, 0, 0] },
-      ];
+      const offsetColorRateMap = this.colorRateMap.map((colorRate) => ({
+        rate: colorRate.rate,
+        color: colorRate.color.map((color) => color / 255),
+      }));
 
-      // 색상 값에 따른 포인터 위치 변경
+      // 원색 포인터 위치 설정
+      const RGB = RGBA.slice(0, 3);
+      const minColorValue = Math.min(...RGB);
+      const originRGB = RGB.map((color) => color - minColorValue);
+      const originColorRateMapIndex = offsetColorRateMap.findIndex((colorRate) =>
+        originRGB.every((origin, index) => {
+          const rateColor = colorRate.color[index];
+          return (origin === 0 && rateColor === 0) || (rateColor > 0 && origin > rateColor);
+        })
+      );
+      const originColorRate = offsetColorRateMap[originColorRateMapIndex].rate;
+      const originPointerDataId = SCPConstant.COLOR_PICKER_ORIGIN_POINTER;
+      const originPointer = this.#element.querySelector(`*[data-id="${originPointerDataId}"]`);
+      const originPointerParent = originPointer.parentNode;
+      const originPointerY = -originPointer.offsetHeight / 2 + originPointerParent.offsetHeight * originColorRate;
+      originPointer.style.top = `${originPointerY}px`;
     };
 
     // color-picker 옵션 설정 및 적용
