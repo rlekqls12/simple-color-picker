@@ -251,7 +251,9 @@
       this.#element.style.left = `${left}px`;
 
       this.#showStatus = SCPConstant.SHOW;
-      this.#element.focus();
+      target.focus();
+      if (Element.prototype.scrollIntoViewIfNeeded) this.#element.scrollIntoViewIfNeeded();
+      else this.#element.scrollIntoView();
       this.#calculateColorToPointer();
     }
     // color-picker 팝업 닫기
