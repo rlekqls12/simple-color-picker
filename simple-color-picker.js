@@ -666,7 +666,7 @@
           return (origin === 0 && rateColor === 0) || (rateColor > 0 && origin > rateColor);
         })
       );
-      const originColorRate = offsetColorRateMap[originColorRateMapIndex].rate;
+      const originColorRate = offsetColorRateMap[originColorRateMapIndex || 0].rate;
       const originPointerDataId = SCPConstant.COLOR_PICKER_ORIGIN_POINTER;
       const originPointer = this.#element.querySelector(`*[data-id="${originPointerDataId}"]`);
       const originPointerParent = originPointer.parentNode;
