@@ -338,15 +338,17 @@
         </div>
         <div data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_WRAP}" style="position: relative; width: 16px; height: 160px; border-radius: 4px; user-select: none;">
           <div style="position: absolute; width: 100%; height: 100%; border-radius: 4px;
-                      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==);
-                      background-image: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='%23ccc' fill-opacity='1'%3E%3Crect x='0' y='0' width='6' height='6' /%3E%3Crect x='6' y='6' width='6' height='6' /%3E%3C/svg%3E);"></div>
+              background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==);
+              background-image: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='%23ccc' fill-opacity='1'%3E%3Crect x='0' y='0' width='6' height='6' /%3E%3Crect x='6' y='6' width='6' height='6' /%3E%3C/svg%3E);"></div>
           <div data-id="${SCPConstant.COLOR_PICKER_SELECT_TRANSPARENCY_COLOR}" style="position: absolute; width: 100%; height: 100%; border-radius: 4px; background: linear-gradient(to bottom,red 0,rgba(255,255,255,0) 100%);"></div>
           <div data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_RANGE}" style="position: absolute; width: 100%; height: 100%;"></div>
           <div data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER}" style="position: absolute; top: -4px; width: 100%; height: 8px; border-radius: 2px; background: white; box-shadow: 0 0 2px 1px rgb(0 0 0 / 20%); cursor: pointer;"></div>
         </div>
       </div>
       <div style="display: flex; align-items: center; width: 100%; margin-top: 8px;">
-        <div data-id="${SCPConstant.COLOR_PICKER_COMPARE}" style="border: 10px solid; box-sizing: border-box;"></div>
+        <div data-id="${SCPConstant.COLOR_PICKER_COMPARE}" style="border: 10px solid; box-sizing: border-box; background-size: 7px; background-attachment: fixed;
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==);
+            background-image: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='%23ccc' fill-opacity='1'%3E%3Crect x='0' y='0' width='6' height='6' /%3E%3Crect x='6' y='6' width='6' height='6' /%3E%3C/svg%3E);"></div>
         <div data-id="${SCPConstant.COLOR_PICKER_CLICK_EVENT_RANGE}" style="flex: 1; text-align: right;">
           <button data-id="${SCPConstant.COLOR_PICKER_CANCEL}" style="cursor: pointer;">Cancel</button>
           <button data-id="${SCPConstant.COLOR_PICKER_CHANGE}" style="cursor: pointer;">Change</button>
