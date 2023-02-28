@@ -642,6 +642,25 @@
 
       console.log("calculateColorToPointer", RGBA);
 
+      // 투명도 포인터 위치 설정
+      const transparencyPointer = this.#element.querySelector(
+        `*[data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER}"]`
+      );
+      const pointerY =
+        -transparencyPointer.offsetHeight / 2 + transparencyPointer.parentNode.offsetHeight * (1 - RGBA[3]);
+      transparencyPointer.style.top = `${pointerY}px`;
+
+      const colorRateMap = [
+        { rate: 0, color: [255, 0, 0] },
+        { rate: 0.17, color: [255, 255, 0] },
+        { rate: 0.33, color: [0, 255, 0] },
+        { rate: 0.5, color: [0, 255, 255] },
+        { rate: 0.67, color: [0, 0, 255] },
+        { rate: 0.83, color: [255, 0, 255] },
+        { rate: 1, color: [255, 0, 0] },
+        { rate: 2, color: [255, 0, 0] },
+      ];
+
       // 색상 값에 따른 포인터 위치 변경
     };
 
