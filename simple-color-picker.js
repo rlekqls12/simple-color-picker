@@ -569,54 +569,72 @@
 
     // 색상 값에 따른 포인터 위치 추출
     #calculateColorToPointer = function () {
-      const value = this.getValue();
+      function convertHexToNumber(hex) {
+        return Number.parseInt(`0x${hex}`);
+      }
+
+      function decimalPlaces(number, digits = 1) {
+        const pow = Math.pow(10, digits);
+        return Math.floor(number * pow) / pow;
+      }
+
+      const value = this.getValue().toLowerCase().replace(/\s/g, "");
       let RGBA = [0, 0, 0, 1];
 
-      if (value.startsWith("#")) {
-        function convertHexToNumber(hex) {
-          return Number.parseInt(`0x${hex}`);
-        }
-
-        let startIndex = 0;
-
-        // #AARRGGBB
-        if (value.length === 9) {
-          RGBA[3] = convertHexToNumber(value.substr(1, 2)) / 255;
-          startIndex = 1;
-        }
-
-        // #RRGGBB / #AARRGGBB
-        if (value.length >= 7) {
-          let index = startIndex,
-            length = startIndex + 1;
-          for (; index < length; index++) {
-            RGBA[index - startIndex] = convertHexToNumber(value.substr(1 + index * 2, 2));
-          }
-        }
-      } else if (value.toLowerCase().startsWith("rgb(")) {
-        // rgb(RR, GG, BB)
-        Object.assign(
-          RGBA,
-          value
-            .toLowerCase()
-            .replace(/rgb\((.*?)\)/, "$1")
-            .split(",")
-            .map(Number)
-        );
-      } else if (value.toLowerCase().startsWith("rgba(")) {
-        // rgba(RR, GG, BB, AA)
-        Object.assign(
-          RGBA,
-          value
-            .toLowerCase()
-            .replace(/rgba\((.*?)\)/, "$1")
-            .split(",")
-            .map(Number)
-        );
-      } else {
-        // TODO: 위치 값 초기화
-        return;
+      // #RGB
+      if (value.startsWith("#") && value.length === 4) {
+        const regex = /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
+        const RGBAText = value.replace(regex, "$1,$2,$3");
+        const RGBAValues = RGBAText.split(",").map(convertHexToNumber).map(decimalPlaces);
+        Object.assign(RGBA, RGBAValues);
       }
+
+      // #RRGGBB
+      if (value.startsWith("#") && value.length === 7) {
+        const regex = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
+        const RGBAText = value.replace(regex, "$1,$2,$3");
+        const RGBAValues = RGBAText.split(",").map(convertHexToNumber).map(decimalPlaces);
+        Object.assign(RGBA, RGBAValues);
+      }
+
+      // #ARGB
+      if (value.startsWith("#") && value.length === 5) {
+        const regex = /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
+        const RGBAText = value.replace(regex, "$1,$2,$3,$4");
+        const RGBAValues = RGBAText.split(",").map(convertHexToNumber).map(decimalPlaces);
+        const alpha = decimalPlaces(RGBAValues.shift() / 255);
+        RGBAValues.push(alpha);
+        Object.assign(RGBA, RGBAValues);
+      }
+
+      // #AARRGGBB
+      if (value.startsWith("#") && value.length === 9) {
+        const regex = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
+        const RGBAText = value.replace(regex, "$1,$2,$3,$4");
+        const RGBAValues = RGBAText.split(",").map(convertHexToNumber).map(decimalPlaces);
+        const alpha = decimalPlaces(RGBAValues.shift() / 255);
+        RGBAValues.push(alpha);
+        Object.assign(RGBA, RGBAValues);
+      }
+
+      // rgb(r,g,b)
+      if (value.startsWith("rgb(")) {
+        const regex = /^rgb\((\d{1,3}),(\d{1,3}),(\d{1,3})\)$/;
+        const RGBAText = value.replace(regex, "$1,$2,$3");
+        const RGBAValues = RGBAText.split(",").map(decimalPlaces);
+        Object.assign(RGBA, RGBAValues);
+      }
+
+      // rgba(r,g,b,a)
+      if (value.startsWith("rgba(")) {
+        const regex = /^rgba\((\d{1,3}),(\d{1,3}),(\d{1,3}),(\d{1,3})\)$/;
+        const RGBAText = value.replace(regex, "$1,$2,$3,$4");
+        const RGBAValues = RGBAText.split(",").map(decimalPlaces);
+        Object.assign(RGBA, RGBAValues);
+      }
+
+      // 값이 NaN이 있으면 오류 발생
+      if (RGBA.some(isNaN)) throw new Error(`not allowed data type : ${value}`);
 
       console.log("calculateColorToPointer", RGBA);
 
