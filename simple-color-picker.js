@@ -643,11 +643,10 @@
       if (RGBA.some(isNaN)) throw new Error(`not allowed data type : ${value}`);
 
       // 투명도 포인터 위치 설정
-      const transparencyPointer = this.#element.querySelector(
-        `*[data-id="${SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER}"]`
-      );
-      const pointerY =
-        -transparencyPointer.offsetHeight / 2 + transparencyPointer.parentNode.offsetHeight * (1 - RGBA[3]);
+      const transparencyPointerDataId = SCPConstant.COLOR_PICKER_TRANSPARENCY_POINTER;
+      const transparencyPointer = this.#element.querySelector(`*[data-id="${transparencyPointerDataId}"]`);
+      const transparencyPointerParent = transparencyPointer.parentNode;
+      const pointerY = -transparencyPointer.offsetHeight / 2 + transparencyPointerParent.offsetHeight * (1 - RGBA[3]);
       transparencyPointer.style.top = `${pointerY}px`;
 
       const colorRateMap = [
