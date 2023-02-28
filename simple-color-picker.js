@@ -623,7 +623,7 @@
 
       // rgb(r,g,b)
       if (value.startsWith("rgb(")) {
-        const regex = /^rgb\((\d{1,3}),(\d{1,3}),(\d{1,3})\)$/;
+        const regex = /^rgb\(([0-9.]+),([0-9.]+),([0-9.]+)\)$/;
         const RGBAText = value.replace(regex, "$1,$2,$3");
         const RGBAValues = RGBAText.split(",").map(decimalPlaces);
         Object.assign(RGBA, RGBAValues);
@@ -631,16 +631,16 @@
 
       // rgba(r,g,b,a)
       if (value.startsWith("rgba(")) {
-        const regex = /^rgba\((\d{1,3}),(\d{1,3}),(\d{1,3}),(\d{1,3})\)$/;
+        const regex = /^rgba\(([0-9.]+),([0-9.]+),([0-9.]+),([0-9.]+)\)$/;
         const RGBAText = value.replace(regex, "$1,$2,$3,$4");
         const RGBAValues = RGBAText.split(",").map(decimalPlaces);
         Object.assign(RGBA, RGBAValues);
       }
 
+      console.log("calculateColorToPointer", RGBA);
+
       // 값이 NaN이 있으면 오류 발생
       if (RGBA.some(isNaN)) throw new Error(`not allowed data type : ${value}`);
-
-      console.log("calculateColorToPointer", RGBA);
 
       // 투명도 포인터 위치 설정
       const transparencyPointer = this.#element.querySelector(
