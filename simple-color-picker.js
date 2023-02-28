@@ -667,11 +667,17 @@
         })
       );
       const originColorRate = offsetColorRateMap[Math.max(originColorRateMapIndex, 0)].rate;
+      // TODO: 원색 포인터 위치 설정할 때, rate 사이사이 범위도 고려해야함
       const originPointerDataId = SCPConstant.COLOR_PICKER_ORIGIN_POINTER;
       const originPointer = this.#element.querySelector(`*[data-id="${originPointerDataId}"]`);
       const originPointerParent = originPointer.parentNode;
       const originPointerY = -originPointer.offsetHeight / 2 + originPointerParent.offsetHeight * originColorRate;
       originPointer.style.top = `${originPointerY}px`;
+
+      // TODO: 색상 포인터 위치 설정
+
+      // 포인터 위치에 따른 Range 색상 변경
+      this.#calculatePointerToColor();
     };
 
     // color-picker 옵션 설정 및 적용
