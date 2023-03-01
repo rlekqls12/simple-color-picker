@@ -669,8 +669,9 @@
         ),
         0
       );
-      const originColorMap = this.colorRateMap[originColorRateMapIndex];
-      const originColorNextMap = this.colorRateMap[originColorRateMapIndex + 1];
+      // TODO: originColorRateMapIndex 값이 1 높게 잡힘
+      const originColorMap = this.colorRateMap[originColorRateMapIndex - 1];
+      const originColorNextMap = this.colorRateMap[originColorRateMapIndex];
       console.log(originColorMap.color, originColorNextMap.color);
       const maxColorValue = Math.max(...originRGB);
       const originProgressList = originRGB
@@ -685,15 +686,18 @@
           const nextColor = originColorNextMap.color[index];
           const molecule = nowColor - color;
           const denominator = nowColor - nextColor;
+          // TODO: 이 계산식도 잘못된 것 같음
+          console.log(index, molecule, denominator, molecule === 0 && denominator === 0 ? -1 : molecule / denominator);
           if (molecule === 0 && denominator === 0) return -1;
           return molecule / denominator;
         })
         .filter((rate) => rate !== -1);
-      const originProgressRate = decimalPlaces(
-        1 - originProgressList.reduce((sum, rate) => sum + rate) / originProgressList.length,
-        2
+      const originProgressRate = originProgressList.reduce((sum, rate) => sum + rate) / originProgressList.length;
+      const originRate = decimalPlaces(
+        originColorMap.rate + (originColorNextMap.rate - originColorMap.rate) * originProgressRate,
+        3
       );
-      const originRate = originColorMap.rate + (originColorNextMap.rate - originColorMap.rate) * originProgressRate;
+      console.log(originProgressList, originProgressRate, originRate);
       // 원색 비율은 구했는데, 왼쪽 컬러 범위에서 움직이면 다시 흐트러짐
       const originPointerDataId = SCPConstant.COLOR_PICKER_ORIGIN_POINTER;
       const originPointer = this.#element.querySelector(`*[data-id="${originPointerDataId}"]`);
