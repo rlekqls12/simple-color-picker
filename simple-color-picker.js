@@ -660,18 +660,45 @@
       const RGB = RGBA.slice(0, 3);
       const minColorValue = Math.min(...RGB);
       const originRGB = RGB.map((color) => color - minColorValue);
-      const originColorRateMapIndex = offsetColorRateMap.findIndex((colorRate) =>
-        originRGB.every((origin, index) => {
-          const rateColor = colorRate.color[index];
-          return (origin === 0 && rateColor === 0) || (rateColor > 0 && origin > rateColor);
-        })
+      const originColorRateMapIndex = Math.max(
+        offsetColorRateMap.findIndex((colorRate) =>
+          originRGB.every((origin, index) => {
+            const rateColor = colorRate.color[index];
+            return (origin === 0 && rateColor === 0) || (rateColor > 0 && origin > rateColor);
+          })
+        ),
+        0
       );
-      const originColorRate = offsetColorRateMap[Math.max(originColorRateMapIndex, 0)].rate;
-      // TODO: 원색 포인터 위치 설정할 때, rate 사이사이 범위도 고려해야함
+      const originColorMap = this.colorRateMap[originColorRateMapIndex];
+      const originColorNextMap = this.colorRateMap[originColorRateMapIndex + 1];
+      console.log(originColorMap.color, originColorNextMap.color);
+      const maxColorValue = Math.max(...originRGB);
+      const originProgressList = originRGB
+        .map((color) => {
+          // 원색 값만 비교할 수 있게 값 정렬
+          if (color === 0) return 0;
+          return color + (255 - maxColorValue);
+        })
+        .map((color, index) => {
+          // 다음 색상까지 진전율
+          const nowColor = originColorMap.color[index];
+          const nextColor = originColorNextMap.color[index];
+          const molecule = nowColor - color;
+          const denominator = nowColor - nextColor;
+          if (molecule === 0 && denominator === 0) return -1;
+          return molecule / denominator;
+        })
+        .filter((rate) => rate !== -1);
+      const originProgressRate = decimalPlaces(
+        1 - originProgressList.reduce((sum, rate) => sum + rate) / originProgressList.length,
+        2
+      );
+      const originRate = originColorMap.rate + (originColorNextMap.rate - originColorMap.rate) * originProgressRate;
+      // 원색 비율은 구했는데, 왼쪽 컬러 범위에서 움직이면 다시 흐트러짐
       const originPointerDataId = SCPConstant.COLOR_PICKER_ORIGIN_POINTER;
       const originPointer = this.#element.querySelector(`*[data-id="${originPointerDataId}"]`);
       const originPointerParent = originPointer.parentNode;
-      const originPointerY = -originPointer.offsetHeight / 2 + originPointerParent.offsetHeight * originColorRate;
+      const originPointerY = -originPointer.offsetHeight / 2 + originPointerParent.offsetHeight * originRate;
       originPointer.style.top = `${originPointerY}px`;
 
       // TODO: 색상 포인터 위치 설정
