@@ -487,11 +487,14 @@
         const parentCoordinate = parent.getBoundingClientRect();
         const pointerCoordinate = pointer.getBoundingClientRect();
 
-        const pointerMaxX = parentCoordinate.width - pointer.offsetWidth / 2;
-        const pointerMaxY = parentCoordinate.height - pointer.offsetHeight / 2;
+        const pointerHalfWidth = pointer.offsetWidth / 2;
+        const pointerHalfHeight = pointer.offsetHeight / 2;
 
-        const pointerRelativeX = pointerCoordinate.x - parentCoordinate.x;
-        const pointerRelativeY = pointerCoordinate.y - parentCoordinate.y;
+        const pointerMaxX = parentCoordinate.width;
+        const pointerMaxY = parentCoordinate.height;
+
+        const pointerRelativeX = pointerCoordinate.x - parentCoordinate.x + pointerHalfWidth;
+        const pointerRelativeY = pointerCoordinate.y - parentCoordinate.y + pointerHalfHeight;
 
         const pointerX = Math.min(Math.max(0, pointerRelativeX), pointerMaxX);
         const pointerY = Math.min(Math.max(0, pointerRelativeY), pointerMaxY);
@@ -651,27 +654,29 @@
         -transparencyPointer.offsetHeight / 2 + transparencyPointerParent.offsetHeight * (1 - RGBA[3]);
       transparencyPointer.style.top = `${transparencyPointerY}px`;
 
-      const offsetColorRateMap = this.colorRateMap.map((colorRate) => ({
-        rate: colorRate.rate,
-        color: colorRate.color.map((color) => color / 255),
-      }));
-
       // 원색 포인터 위치 설정
       const RGB = RGBA.slice(0, 3);
       const minColorValue = Math.min(...RGB);
       const originRGB = RGB.map((color) => color - minColorValue);
       const originColorRateMapIndex = Math.max(
-        offsetColorRateMap.findIndex((colorRate) =>
+        this.colorRateMap.findIndex((colorRate, ii, colorRateMap) =>
           originRGB.every((origin, index) => {
+            // 범위 다 돌았는데 못 찾았으면 실패
+            if (ii + 1 === colorRateMap.length) return false;
+
             const rateColor = colorRate.color[index];
-            return (origin === 0 && rateColor === 0) || (rateColor > 0 && origin > rateColor);
+            const nextRateColor = colorRateMap[ii + 1].color[index];
+            // 1. 현재와 다음 색상이 0이면 지금 색상도 0이여야함
+            if (rateColor === 0 && nextRateColor === 0 && origin !== 0) return false;
+            // 2. 현재와 다음 색상이 255이면 지금 색상도 255이여야함
+            if (rateColor === 255 && nextRateColor === 255 && origin !== 255) return false;
+            return true;
           })
         ),
         0
       );
-      // TODO: originColorRateMapIndex 값이 1 높게 잡힘
-      const originColorMap = this.colorRateMap[originColorRateMapIndex - 1];
-      const originColorNextMap = this.colorRateMap[originColorRateMapIndex];
+      const originColorMap = this.colorRateMap[originColorRateMapIndex];
+      const originColorNextMap = this.colorRateMap[originColorRateMapIndex + 1];
       console.log(originColorMap.color, originColorNextMap.color);
       const maxColorValue = Math.max(...originRGB);
       const originProgressList = originRGB
@@ -684,12 +689,9 @@
           // 다음 색상까지 진전율
           const nowColor = originColorMap.color[index];
           const nextColor = originColorNextMap.color[index];
-          const molecule = nowColor - color;
-          const denominator = nowColor - nextColor;
-          // TODO: 이 계산식도 잘못된 것 같음
-          console.log(index, molecule, denominator, molecule === 0 && denominator === 0 ? -1 : molecule / denominator);
-          if (molecule === 0 && denominator === 0) return -1;
-          return molecule / denominator;
+          const progress = (color - nowColor) / (nextColor - nowColor);
+          if (isNaN(progress) || isFinite(progress) === false) return -1;
+          return progress;
         })
         .filter((rate) => rate !== -1);
       const originProgressRate = originProgressList.reduce((sum, rate) => sum + rate) / originProgressList.length;
@@ -697,8 +699,8 @@
         originColorMap.rate + (originColorNextMap.rate - originColorMap.rate) * originProgressRate,
         3
       );
-      console.log(originProgressList, originProgressRate, originRate);
-      // 원색 비율은 구했는데, 왼쪽 컬러 범위에서 움직이면 다시 흐트러짐
+      // TODO: 원색 비율은 구했는데, 왼쪽 컬러 범위에서 움직이면 다시 흐트러짐
+      // TODO: 여기서 왼쪽 컬러 범위만큼 + - 시키기
       const originPointerDataId = SCPConstant.COLOR_PICKER_ORIGIN_POINTER;
       const originPointer = this.#element.querySelector(`*[data-id="${originPointerDataId}"]`);
       const originPointerParent = originPointer.parentNode;
