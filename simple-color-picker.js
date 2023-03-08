@@ -656,6 +656,7 @@
 
       // 원색 포인터 위치 설정
       const RGB = RGBA.slice(0, 3);
+      // TODO: 최소 색상 빼는 건, RGB 모두 색상값이 있을 때만 빼야함
       const minColorValue = Math.min(...RGB);
       const originRGB = RGB.map((color) => color - minColorValue);
       const originColorRateMapIndex = Math.max(
